@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 import { Order, OrderStatus, OrderNote } from '../../data/models/order.model';
 
 @Injectable({ providedIn: 'root' })
@@ -23,8 +23,8 @@ export class OrderService {
   });
 
   constructor() {
-    this.http.get<Order[]>('/api/orders?limit=100').subscribe(orders => {
-      this._orders.set(orders);
+    this.http.get<any>('/api/orders?limit=100').subscribe(res => {
+      this._orders.set(res.data ?? res);
     });
   }
 
@@ -37,7 +37,10 @@ export class OrderService {
   }
 
   getByCustomerId(customerId: string): Observable<Order[]> {
-    return this.http.get<Order[]>(`/api/orders?customerId=${customerId}&limit=100`);
+    return this.http.get<any>(`/api/orders?customerId=${customerId}&limit=100`).pipe(
+      tap(() => {}),
+      map((res: any) => res.data ?? res),
+    );
   }
 
   updateStatus(id: string, status: OrderStatus): Observable<Order> {

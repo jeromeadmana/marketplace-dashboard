@@ -60,10 +60,12 @@ export class BreadcrumbsComponent {
     if (children.length === 0) return crumbs;
 
     for (const child of children) {
-      const segments = child.snapshot.url.map(s => s.path);
+      const snapshot = child.snapshot;
+      if (!snapshot?.url) continue;
+      const segments = snapshot.url.map(s => s.path);
       if (segments.length) {
         url += '/' + segments.join('/');
-        const label = child.snapshot.data['breadcrumb'] ?? segments.join('/');
+        const label = snapshot.data['breadcrumb'] ?? segments.join('/');
         crumbs.push({ label, url });
       }
       return this.buildBreadcrumbs(child, url, crumbs);

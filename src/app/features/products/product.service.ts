@@ -22,9 +22,9 @@ export class ProductService {
 
   private loadProducts(): void {
     this.loadingSignal.set(true);
-    this.http.get<Product[]>('/api/products?limit=100').subscribe({
-      next: (products) => {
-        this.productsSignal.set(products);
+    this.http.get<any>('/api/products?limit=100').subscribe({
+      next: (res) => {
+        this.productsSignal.set(res.data ?? res);
         this.loadingSignal.set(false);
       },
       error: () => {
