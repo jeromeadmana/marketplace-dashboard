@@ -1,0 +1,276 @@
+<div class="product-editor">
+  <!-- Header -->
+  <div class="product-editor__header">
+    <h1 class="page__title">
+      @if (isEditMode()) {
+        Edit Product
+      } @else {
+        New Product
+      }
+    </h1>
+    <div class="product-editor__header-actions">
+      <button class="btn btn--secondary" (click)="cancel()">Cancel</button>
+      <button
+        class="btn btn--primary"
+        [disabled]="saving()"
+        (click)="onSubmit()">
+        @if (saving()) {
+          Saving...
+        } @else if (isEditMode()) {
+          Save Changes
+        } @else {
+          Create Product
+        }
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="product-editor__layout">
+    <!-- Main Column -->
+    <div class="product-editor__main">
+      <!-- Basic Info -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">Basic Information</h2>
+
+        <div class="form-group">
+          <label for="name">Product Name *</label>
+          <input id="name" formControlName="name" placeholder="Enter product name" />
+          @if (hasError('name')) {
+            <div class="form-error">{{ getError('name') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="slug">Slug *</label>
+          <input id="slug" formControlName="slug" placeholder="product-slug" />
+          @if (hasError('slug')) {
+            <div class="form-error">{{ getError('slug') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea id="description" formControlName="description" placeholder="Describe your product..."></textarea>
+          @if (hasError('description')) {
+            <div class="form-error">{{ getError('description') }}</div>
+          }
+        </div>
+
+        <div class="product-editor__row">
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" formControlName="category">
+              <option value="">Select category</option>
+              @for (cat of categories(); track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+              <option value="__new">+ New category...</option>
+            </select>
+            @if (hasError('category')) {
+              <div class="form-error">{{ getError('category') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="subcategory">Subcategory</label>
+            <input id="subcategory" formControlName="subcategory" placeholder="Optional subcategory" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">Pricing</h2>
+
+        <div class="product-editor__row product-editor__row--3">
+          <div class="form-group">
+            <label for="price">Price *</label>
+            <input id="price" type="number" step="0.01" formControlName="price" placeholder="0.00" />
+            @if (hasError('price')) {
+              <div class="form-error">{{ getError('price') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="compareAtPrice">Compare At Price</label>
+            <input id="compareAtPrice" type="number" step="0.01" formControlName="compareAtPrice" placeholder="0.00" />
+          </div>
+
+          <div class="form-group">
+            <label for="cost">Cost</label>
+            <input id="cost" type="number" step="0.01" formControlName="cost" placeholder="0.00" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">Inventory</h2>
+
+        <div class="product-editor__row product-editor__row--3">
+          <div class="form-group">
+            <label for="sku">SKU *</label>
+            <input id="sku" formControlName="sku" placeholder="SKU-001" />
+            @if (hasError('sku')) {
+              <div class="form-error">{{ getError('sku') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="stock">Stock *</label>
+            <input id="stock" type="number" formControlName="stock" placeholder="0" />
+            @if (hasError('stock')) {
+              <div class="form-error">{{ getError('stock') }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="lowStockThreshold">Low Stock Threshold</label>
+            <input id="lowStockThreshold" type="number" formControlName="lowStockThreshold" placeholder="10" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Variants -->
+      <div class="card product-editor__section">
+        <div class="product-editor__section-header">
+          <h2 class="product-editor__section-title">Variants</h2>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addVariant()">+ Add Variant</button>
+        </div>
+
+        @if (variantsArray.length === 0) {
+          <p class="product-editor__empty-text">No variants added. Click "Add Variant" to create one.</p>
+        }
+
+        <div formArrayName="variants">
+        @for (variant of variantsArray.controls; track $index; let i = $index) {
+          <div class="product-editor__variant" [formGroupName]="i">
+            <div>
+              <div class="product-editor__variant-header">
+                <span class="product-editor__variant-label">Variant {{ i + 1 }}</span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="removeVariant(i)">Remove</button>
+              </div>
+              <div class="product-editor__row">
+                <div class="form-group">
+                  <label>Name *</label>
+                  <input formControlName="name" placeholder="Variant name" />
+                </div>
+                <div class="form-group">
+                  <label>SKU *</label>
+                  <input formControlName="sku" placeholder="Variant SKU" />
+                </div>
+              </div>
+              <div class="product-editor__row">
+                <div class="form-group">
+                  <label>Price *</label>
+                  <input type="number" step="0.01" formControlName="price" placeholder="0.00" />
+                </div>
+                <div class="form-group">
+                  <label>Stock *</label>
+                  <input type="number" formControlName="stock" placeholder="0" />
+                </div>
+              </div>
+              <div class="product-editor__row">
+                <div class="form-group">
+                  <label>Attribute Keys</label>
+                  <input formControlName="attributeKeys" placeholder="color, size" />
+                </div>
+                <div class="form-group">
+                  <label>Attribute Values</label>
+                  <input formControlName="attributeValues" placeholder="Red, M" />
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="card product-editor__section">
+        <div class="product-editor__section-header">
+          <h2 class="product-editor__section-title">Images</h2>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addImage()">+ Add Image</button>
+        </div>
+
+        @if (imageUrls().length === 0) {
+          <p class="product-editor__empty-text">No images added yet.</p>
+        } @else {
+          <div class="product-editor__images">
+            @for (img of imageUrls(); track img.url; let i = $index) {
+              <div class="product-editor__image-item">
+                <div class="product-editor__image-preview">
+                  <img [src]="img.url" alt="Product image" />
+                </div>
+                <div class="product-editor__image-actions">
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--sm"
+                    [class.product-editor__image-primary]="img.isPrimary"
+                    (click)="setPrimaryImage(i)">
+                    @if (img.isPrimary) {
+                      Primary
+                    } @else {
+                      Set Primary
+                    }
+                  </button>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="removeImage(i)">Remove</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- SEO -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">SEO</h2>
+
+        <div class="form-group">
+          <label for="seoTitle">SEO Title</label>
+          <input id="seoTitle" formControlName="seoTitle" placeholder="SEO-friendly title" />
+        </div>
+
+        <div class="form-group">
+          <label for="seoDescription">SEO Description</label>
+          <textarea id="seoDescription" formControlName="seoDescription" placeholder="Brief SEO description..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="product-editor__sidebar">
+      <!-- Status -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">Status</h2>
+        <div class="form-group">
+          <select formControlName="status">
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="card product-editor__section">
+        <h2 class="product-editor__section-title">Tags</h2>
+        <div class="product-editor__tags-input">
+          <input
+            type="text"
+            placeholder="Type and press Enter"
+            (keydown)="onTagKeydown($event)" />
+        </div>
+        @if (tags().length > 0) {
+          <div class="product-editor__tags">
+            @for (tag of tags(); track tag) {
+              <span class="product-editor__tag" (click)="removeTag(tag)">
+                {{ tag }} &times;
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </form>
+</div>

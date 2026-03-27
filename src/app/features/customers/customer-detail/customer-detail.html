@@ -1,0 +1,188 @@
+@if (customer(); as c) {
+  <div class="customer-detail">
+    <!-- Back Button -->
+    <button class="btn btn--ghost customer-detail__back" (click)="goBack()">
+      &#8592; Back to Customers
+    </button>
+
+    <!-- Header -->
+    <div class="customer-detail__header">
+      <div class="customer-detail__avatar">
+        @if (c.avatar) {
+          <img [src]="c.avatar" [alt]="c.name" class="customer-detail__avatar-img" />
+        } @else {
+          <span class="customer-detail__avatar-initials">{{ c.name | initials }}</span>
+        }
+      </div>
+      <div class="customer-detail__header-info">
+        <h1 class="customer-detail__name">{{ c.name }}</h1>
+        <p class="customer-detail__email">{{ c.email }}</p>
+        <div class="customer-detail__header-meta">
+          @let badge = segmentBadge();
+          <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+          <span class="customer-detail__member-since">Member since {{ c.createdAt | relativeTime }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="customer-detail__stats">
+      <div class="card customer-detail__stat-card">
+        <span class="customer-detail__stat-label">Total Orders</span>
+        <span class="customer-detail__stat-value">{{ c.totalOrders }}</span>
+      </div>
+      <div class="card customer-detail__stat-card">
+        <span class="customer-detail__stat-label">Total Spent</span>
+        <span class="customer-detail__stat-value">{{ c.totalSpent | currencyFormat }}</span>
+      </div>
+      <div class="card customer-detail__stat-card">
+        <span class="customer-detail__stat-label">Avg Order Value</span>
+        <span class="customer-detail__stat-value">{{ c.averageOrderValue | currencyFormat }}</span>
+      </div>
+      <div class="card customer-detail__stat-card">
+        <span class="customer-detail__stat-label">Last Order</span>
+        <span class="customer-detail__stat-value customer-detail__stat-value--sm">{{ c.lastOrderAt | relativeTime }}</span>
+      </div>
+    </div>
+
+    <!-- Two-Column Layout -->
+    <div class="customer-detail__content">
+      <!-- Left: Tabs -->
+      <div class="customer-detail__main">
+        <div class="card">
+          <div class="customer-detail__tab-bar">
+            <button
+              class="customer-detail__tab"
+              [class.customer-detail__tab--active]="activeTab() === 'orders'"
+              (click)="setTab('orders')">
+              Order History
+            </button>
+            <button
+              class="customer-detail__tab"
+              [class.customer-detail__tab--active]="activeTab() === 'activity'"
+              (click)="setTab('activity')">
+              Activity
+            </button>
+          </div>
+
+          @switch (activeTab()) {
+            @case ('orders') {
+              @if (orders().length > 0) {
+                <div class="customer-detail__orders-scroll">
+                  <table class="customer-detail__orders-table">
+                    <thead>
+                      <tr>
+                        <th class="customer-detail__orders-th">Order</th>
+                        <th class="customer-detail__orders-th customer-detail__orders-th--right">Total</th>
+                        <th class="customer-detail__orders-th">Status</th>
+                        <th class="customer-detail__orders-th">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (order of orders(); track order.id) {
+                        @let orderBadge = order.status | statusBadge;
+                        <tr class="customer-detail__orders-row">
+                          <td class="customer-detail__orders-td customer-detail__orders-td--order">{{ order.orderNumber }}</td>
+                          <td class="customer-detail__orders-td customer-detail__orders-td--right">{{ order.total | currencyFormat }}</td>
+                          <td class="customer-detail__orders-td">
+                            <app-badge [label]="orderBadge.label" [cssClass]="orderBadge.cssClass" />
+                          </td>
+                          <td class="customer-detail__orders-td">{{ order.createdAt | relativeTime }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <app-empty-state
+                  icon="&#128230;"
+                  title="No orders yet"
+                  message="This customer hasn't placed any orders." />
+              }
+            }
+            @case ('activity') {
+              @if (c.activities.length > 0) {
+                <div class="customer-detail__timeline">
+                  @for (activity of c.activities; track activity.id) {
+                    <div class="customer-detail__timeline-item">
+                      <div class="customer-detail__timeline-dot" [class]="getActivityDotClass(activity.type)">
+                        {{ getActivityIcon(activity.type) }}
+                      </div>
+                      <div class="customer-detail__timeline-content">
+                        <p class="customer-detail__timeline-desc">{{ activity.description }}</p>
+                        <span class="customer-detail__timeline-date">{{ activity.createdAt | relativeTime }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <app-empty-state
+                  icon="&#128196;"
+                  title="No activity"
+                  message="No activity recorded for this customer yet." />
+              }
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div class="customer-detail__sidebar">
+        <!-- Contact Info -->
+        <div class="card customer-detail__sidebar-card">
+          <h3 class="card__title">Contact Info</h3>
+          <div class="customer-detail__contact-list">
+            <div class="customer-detail__contact-item">
+              <span class="customer-detail__contact-label">Email</span>
+              <span class="customer-detail__contact-value">{{ c.email }}</span>
+            </div>
+            @if (c.phone) {
+              <div class="customer-detail__contact-item">
+                <span class="customer-detail__contact-label">Phone</span>
+                <span class="customer-detail__contact-value">{{ c.phone }}</span>
+              </div>
+            }
+            @if (c.address) {
+              <div class="customer-detail__contact-item">
+                <span class="customer-detail__contact-label">Address</span>
+                <span class="customer-detail__contact-value">{{ c.address.city }}, {{ c.address.state }}, {{ c.address.country }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="card customer-detail__sidebar-card">
+          <h3 class="card__title">Tags</h3>
+          <div class="customer-detail__tags">
+            @for (tag of c.tags; track tag) {
+              <span class="customer-detail__tag">
+                {{ tag }}
+                <button class="customer-detail__tag-remove" (click)="removeTag(tag)">&times;</button>
+              </span>
+            }
+            @if (c.tags.length === 0) {
+              <span class="customer-detail__tags-empty">No tags</span>
+            }
+          </div>
+          <div class="customer-detail__tag-input-wrap">
+            <input
+              type="text"
+              class="customer-detail__tag-input"
+              placeholder="Add tag and press Enter..."
+              [value]="newTag()"
+              (input)="onTagInput($event)"
+              (keydown)="addTag($event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="card">
+    <app-empty-state
+      icon="&#128100;"
+      title="Customer not found"
+      message="The customer you're looking for doesn't exist." />
+  </div>
+}

@@ -1,0 +1,244 @@
+@if (loading()) {
+  <div class="order-detail">
+    <p class="order-detail__loading">Loading order...</p>
+  </div>
+} @else if (order(); as o) {
+  @let statusBadge = o.status | statusBadge;
+  @let paymentBadge = o.paymentStatus | statusBadge;
+  <div class="order-detail">
+    <!-- Header -->
+    <div class="order-detail__header">
+      <div class="order-detail__header-left">
+        <button class="btn btn--ghost btn--sm" (click)="goBack()">
+          &larr; Back to Orders
+        </button>
+        <div class="order-detail__title-row">
+          <h1 class="page__title">{{ o.orderNumber }}</h1>
+          <app-badge [label]="statusBadge.label" [cssClass]="statusBadge.cssClass" />
+          <app-badge [label]="paymentBadge.label" [cssClass]="paymentBadge.cssClass" />
+        </div>
+        <p class="order-detail__date">Placed on {{ o.createdAt | date:'medium' }}</p>
+      </div>
+      <div class="order-detail__actions">
+        @for (action of statusActions(); track action.targetStatus) {
+          <button class="btn" [class]="'btn ' + action.btnClass" (click)="requestStatusChange(action)">
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (o.trackingNumber) {
+      <div class="order-detail__tracking card">
+        <span class="order-detail__tracking-label">Tracking Number:</span>
+        <span class="order-detail__tracking-value">{{ o.trackingNumber }}</span>
+      </div>
+    }
+
+    <div class="order-detail__grid">
+      <!-- Left Column -->
+      <div class="order-detail__main">
+        <!-- Line Items -->
+        <div class="card order-detail__items-card">
+          <div class="card__header">
+            <h2 class="card__title">Line Items</h2>
+          </div>
+          <div class="order-detail__items-scroll">
+            <table class="order-detail__items-table">
+              <thead>
+                <tr>
+                  <th class="order-detail__items-th">Product</th>
+                  <th class="order-detail__items-th">SKU</th>
+                  <th class="order-detail__items-th order-detail__items-th--right">Qty</th>
+                  <th class="order-detail__items-th order-detail__items-th--right">Unit Price</th>
+                  <th class="order-detail__items-th order-detail__items-th--right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of o.items; track item.id) {
+                  <tr class="order-detail__items-row">
+                    <td class="order-detail__items-td">
+                      <div class="order-detail__product">
+                        <img class="order-detail__product-img" [src]="item.productImage" [alt]="item.productName" />
+                        <div class="order-detail__product-info">
+                          <span class="order-detail__product-name">{{ item.productName }}</span>
+                          @if (item.variantName) {
+                            <span class="order-detail__product-variant">{{ item.variantName }}</span>
+                          }
+                        </div>
+                      </div>
+                    </td>
+                    <td class="order-detail__items-td order-detail__items-td--mono">{{ item.sku }}</td>
+                    <td class="order-detail__items-td order-detail__items-td--right">{{ item.quantity }}</td>
+                    <td class="order-detail__items-td order-detail__items-td--right">{{ item.unitPrice | currencyFormat }}</td>
+                    <td class="order-detail__items-td order-detail__items-td--right order-detail__items-td--bold">{{ item.total | currencyFormat }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="card order-detail__summary-card">
+          <div class="card__header">
+            <h2 class="card__title">Order Summary</h2>
+          </div>
+          <div class="order-detail__summary">
+            <div class="order-detail__summary-row">
+              <span>Subtotal</span>
+              <span>{{ o.subtotal | currencyFormat }}</span>
+            </div>
+            <div class="order-detail__summary-row">
+              <span>Tax</span>
+              <span>{{ o.tax | currencyFormat }}</span>
+            </div>
+            <div class="order-detail__summary-row">
+              <span>Shipping</span>
+              <span>{{ o.shipping === 0 ? 'Free' : (o.shipping | currencyFormat) }}</span>
+            </div>
+            @if (o.discount > 0) {
+              <div class="order-detail__summary-row order-detail__summary-row--discount">
+                <span>
+                  Discount
+                  @if (o.couponCode) {
+                    <span class="order-detail__coupon">{{ o.couponCode }}</span>
+                  }
+                </span>
+                <span>-{{ o.discount | currencyFormat }}</span>
+              </div>
+            }
+            <div class="order-detail__summary-row order-detail__summary-row--total">
+              <span>Total</span>
+              <span>{{ o.total | currencyFormat }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+          <div class="card__header">
+            <h2 class="card__title">Order Timeline</h2>
+          </div>
+          <div class="order-detail__timeline">
+            @for (event of sortedTimeline(); track event.id) {
+              @let evtBadge = event.status | statusBadge;
+              <div class="order-detail__timeline-item">
+                <div class="order-detail__timeline-dot" [class]="'order-detail__timeline-dot--' + event.status"></div>
+                <div class="order-detail__timeline-content">
+                  <div class="order-detail__timeline-header">
+                    <app-badge [label]="evtBadge.label" [cssClass]="evtBadge.cssClass" />
+                    <span class="order-detail__timeline-date">{{ event.createdAt | date:'medium' }}</span>
+                  </div>
+                  <p class="order-detail__timeline-msg">{{ event.message }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="card">
+          <div class="card__header">
+            <h2 class="card__title">Notes</h2>
+          </div>
+          @if (o.notes.length > 0) {
+            <div class="order-detail__notes">
+              @for (note of o.notes; track note.id) {
+                <div class="order-detail__note">
+                  <div class="order-detail__note-header">
+                    <span class="order-detail__note-author">{{ note.author }}</span>
+                    @if (note.isInternal) {
+                      <span class="order-detail__note-badge">Internal</span>
+                    }
+                    <span class="order-detail__note-date">{{ note.createdAt | relativeTime }}</span>
+                  </div>
+                  <p class="order-detail__note-text">{{ note.text }}</p>
+                </div>
+              }
+            </div>
+          }
+          <div class="order-detail__note-form">
+            <textarea
+              class="order-detail__note-input"
+              placeholder="Add a note..."
+              [value]="noteText()"
+              (input)="noteText.set($any($event.target).value)"
+              rows="3"></textarea>
+            <div class="order-detail__note-controls">
+              <label class="order-detail__note-toggle">
+                <input
+                  type="checkbox"
+                  [checked]="noteInternal()"
+                  (change)="noteInternal.set($any($event.target).checked)" />
+                Internal note
+              </label>
+              <button
+                class="btn btn--primary btn--sm"
+                [disabled]="!noteText().trim()"
+                (click)="addNote()">
+                Add Note
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div class="order-detail__sidebar">
+        <!-- Customer Info -->
+        <div class="card">
+          <div class="card__header">
+            <h2 class="card__title">Customer</h2>
+          </div>
+          <div class="order-detail__customer">
+            <p class="order-detail__customer-name">{{ o.customerName }}</p>
+            <p class="order-detail__customer-email">{{ o.customerEmail }}</p>
+            <a class="order-detail__customer-link" [routerLink]="['/customers', o.customerId]">View Customer</a>
+          </div>
+        </div>
+
+        <!-- Shipping Address -->
+        <div class="card">
+          <div class="card__header">
+            <h2 class="card__title">Shipping Address</h2>
+          </div>
+          <div class="order-detail__address">
+            <p>{{ o.shippingAddress.name }}</p>
+            <p>{{ o.shippingAddress.line1 }}</p>
+            @if (o.shippingAddress.line2) {
+              <p>{{ o.shippingAddress.line2 }}</p>
+            }
+            <p>{{ o.shippingAddress.city }}, {{ o.shippingAddress.state }} {{ o.shippingAddress.postalCode }}</p>
+            <p>{{ o.shippingAddress.country }}</p>
+            @if (o.shippingAddress.phone) {
+              <p class="order-detail__address-phone">{{ o.shippingAddress.phone }}</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <app-modal
+    [open]="showConfirmModal()"
+    [title]="'Confirm Status Change'"
+    size="sm"
+    (close)="cancelStatusChange()">
+    @if (pendingAction(); as action) {
+      <p>Are you sure you want to <strong>{{ action.label.toLowerCase() }}</strong>?</p>
+    }
+    <div modal-footer>
+      <button class="btn btn--ghost" (click)="cancelStatusChange()">Cancel</button>
+      <button class="btn btn--primary" (click)="confirmStatusChange()">Confirm</button>
+    </div>
+  </app-modal>
+} @else {
+  <div class="order-detail">
+    <button class="btn btn--ghost btn--sm" (click)="goBack()">&larr; Back to Orders</button>
+    <div class="card" style="margin-top: 1rem;">
+      <p>Order not found.</p>
+    </div>
+  </div>
+}

@@ -1,0 +1,35 @@
+<aside class="sidebar" [class.sidebar--collapsed]="collapsed()">
+  <div class="sidebar__brand">
+    @if (!collapsed()) {
+      <span class="sidebar__logo">🛍️</span>
+      <span class="sidebar__brand-text">MarketHub</span>
+    } @else {
+      <span class="sidebar__logo">🛍️</span>
+    }
+  </div>
+
+  <nav class="sidebar__nav">
+    @for (group of navGroups; track group.label) {
+      @if (!collapsed()) {
+        <div class="sidebar__group-label">{{ group.label }}</div>
+      }
+      @for (item of group.items; track item.route) {
+        @if (hasPermission(item)) {
+          <a
+            class="sidebar__link"
+            [routerLink]="item.route"
+            routerLinkActive="sidebar__link--active">
+            <span class="sidebar__link-icon">{{ item.icon }}</span>
+            @if (!collapsed()) {
+              <span class="sidebar__link-label">{{ item.label }}</span>
+            }
+          </a>
+        }
+      }
+    }
+  </nav>
+
+  <button class="sidebar__toggle" (click)="toggleCollapse.emit()">
+    {{ collapsed() ? '→' : '←' }}
+  </button>
+</aside>

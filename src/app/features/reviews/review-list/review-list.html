@@ -1,0 +1,209 @@
+<div class="reviews-page">
+  <div class="reviews-page__header">
+    <h1 class="reviews-page__title">Reviews</h1>
+    <p class="reviews-page__subtitle">Monitor and respond to customer feedback</p>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="reviews-summary">
+    <!-- Average Rating -->
+    <div class="card reviews-summary__rating">
+      <div class="reviews-summary__rating-number">{{ reviewService.averageRating() }}</div>
+      <div class="reviews-summary__rating-stars">
+        @for (star of [1, 2, 3, 4, 5]; track star) {
+          <span class="star">{{ star <= Math.round(reviewService.averageRating()) ? '★' : '☆' }}</span>
+        }
+      </div>
+      <div class="reviews-summary__rating-total">{{ reviewService.totalCount() }} reviews</div>
+    </div>
+
+    <!-- Rating Distribution -->
+    <div class="card reviews-summary__distribution">
+      <div class="card__header">
+        <h3 class="card__title">Rating Distribution</h3>
+      </div>
+      @for (star of [5, 4, 3, 2, 1]; track star) {
+        @let count = reviewService.ratingDistribution()[star];
+        @let pct = reviewService.totalCount() > 0 ? (count / reviewService.totalCount()) * 100 : 0;
+        <div class="distribution-row">
+          <span class="distribution-row__label">{{ star }} ★</span>
+          <div class="distribution-row__bar">
+            <div class="distribution-row__fill" [style.width.%]="pct"></div>
+          </div>
+          <span class="distribution-row__count">{{ count }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Sentiment Breakdown -->
+    <div class="reviews-summary__sentiments">
+      @let s = reviewService.sentimentBreakdown();
+      @let total = reviewService.totalCount();
+      <div class="card sentiment-card sentiment-card--positive">
+        <div class="sentiment-card__indicator"></div>
+        <div class="sentiment-card__content">
+          <span class="sentiment-card__count">{{ s.positive }}</span>
+          <span class="sentiment-card__label">Positive</span>
+          <span class="sentiment-card__pct">{{ total > 0 ? Math.round((s.positive / total) * 100) : 0 }}%</span>
+        </div>
+      </div>
+      <div class="card sentiment-card sentiment-card--neutral">
+        <div class="sentiment-card__indicator"></div>
+        <div class="sentiment-card__content">
+          <span class="sentiment-card__count">{{ s.neutral }}</span>
+          <span class="sentiment-card__label">Neutral</span>
+          <span class="sentiment-card__pct">{{ total > 0 ? Math.round((s.neutral / total) * 100) : 0 }}%</span>
+        </div>
+      </div>
+      <div class="card sentiment-card sentiment-card--negative">
+        <div class="sentiment-card__indicator"></div>
+        <div class="sentiment-card__content">
+          <span class="sentiment-card__count">{{ s.negative }}</span>
+          <span class="sentiment-card__label">Negative</span>
+          <span class="sentiment-card__pct">{{ total > 0 ? Math.round((s.negative / total) * 100) : 0 }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="reviews-filters">
+    <div class="reviews-filters__search">
+      <app-search-input
+        placeholder="Search by product or customer..."
+        (searchChange)="onSearch($event)" />
+    </div>
+
+    <div class="reviews-filters__controls">
+      <select class="reviews-filters__select" [value]="ratingFilter()" (change)="onRatingFilter($event)">
+        <option value="0">All Ratings</option>
+        <option value="5">5 Stars</option>
+        <option value="4">4 Stars</option>
+        <option value="3">3 Stars</option>
+        <option value="2">2 Stars</option>
+        <option value="1">1 Star</option>
+      </select>
+
+      <div class="reviews-filters__tabs">
+        @for (tab of sentimentTabs; track tab.value) {
+          <button
+            class="reviews-filters__tab"
+            [class.reviews-filters__tab--active]="sentimentFilter() === tab.value"
+            (click)="sentimentFilter.set(tab.value)">
+            {{ tab.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Cards -->
+  @if (paginatedReviews().length === 0) {
+    <app-empty-state
+      icon="📝"
+      title="No reviews found"
+      message="Try adjusting your filters to see more results." />
+  } @else {
+    <div class="reviews-list">
+      @for (review of paginatedReviews(); track review.id) {
+        <div
+          class="card review-card"
+          [class.review-card--flagged]="review.isFlagged"
+          [class.review-card--hidden]="review.isHidden">
+
+          <div class="review-card__header">
+            <div class="review-card__customer">
+              @if (review.customerAvatar) {
+                <img
+                  class="review-card__avatar"
+                  [src]="review.customerAvatar"
+                  [alt]="review.customerName" />
+              } @else {
+                <div class="review-card__avatar review-card__avatar--placeholder">
+                  {{ review.customerName.charAt(0) }}
+                </div>
+              }
+              <div class="review-card__customer-info">
+                <span class="review-card__customer-name">{{ review.customerName }}</span>
+                <span class="review-card__date">{{ review.createdAt | relativeTime }}</span>
+              </div>
+            </div>
+            <div class="review-card__meta">
+              <div class="review-card__stars">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <span class="star">{{ star <= review.rating ? '★' : '☆' }}</span>
+                }
+              </div>
+              <app-badge
+                [label]="review.sentiment"
+                [cssClass]="getSentimentBadgeClass(review.sentiment)" />
+            </div>
+          </div>
+
+          <div class="review-card__product">{{ review.productName }}</div>
+
+          <div class="review-card__body">
+            <h4 class="review-card__title">{{ review.title }}</h4>
+            <p class="review-card__text">{{ review.body }}</p>
+          </div>
+
+          <!-- Reply Section -->
+          @if (review.reply) {
+            <div class="review-card__reply">
+              <div class="review-card__reply-header">
+                <strong>{{ review.reply.author }}</strong>
+                <span class="review-card__reply-date">{{ review.reply.createdAt | relativeTime }}</span>
+              </div>
+              <p class="review-card__reply-text">{{ review.reply.text }}</p>
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="review-card__actions">
+            @if (!review.reply) {
+              <button class="btn btn--primary btn--sm" (click)="openReplyModal(review.id)">Reply</button>
+            }
+            <button
+              class="btn btn--ghost btn--sm"
+              (click)="reviewService.toggleFlagged(review.id)">
+              {{ review.isFlagged ? 'Unflag' : 'Flag' }}
+            </button>
+            <button
+              class="btn btn--ghost btn--sm"
+              (click)="reviewService.toggleHidden(review.id)">
+              {{ review.isHidden ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <app-paginator
+      [total]="filteredReviews().length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage()"
+      (pageChange)="currentPage.set($event)" />
+  }
+</div>
+
+<!-- Reply Modal -->
+<app-modal
+  [open]="replyModalOpen()"
+  title="Reply to Review"
+  size="md"
+  (close)="closeReplyModal()">
+  <div class="form-group">
+    <label class="form-group__label" for="replyText">Your reply</label>
+    <textarea
+      id="replyText"
+      class="form-group__textarea"
+      rows="4"
+      placeholder="Write your response..."
+      [value]="replyText()"
+      (input)="onReplyInput($event)"></textarea>
+  </div>
+  <div modal-footer>
+    <button class="btn btn--secondary" (click)="closeReplyModal()">Cancel</button>
+    <button class="btn btn--primary" [disabled]="!replyText().trim()" (click)="submitReply()">Submit Reply</button>
+  </div>
+</app-modal>

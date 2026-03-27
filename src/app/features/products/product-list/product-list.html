@@ -1,0 +1,318 @@
+<div class="product-list">
+  @if (loading()) {
+    <!-- Skeleton Loading State -->
+    <div class="product-list__header">
+      <div class="product-list__header-left">
+        <app-skeleton width="160px" height="32px" />
+      </div>
+      <app-skeleton width="130px" height="40px" radius="0.5rem" />
+    </div>
+
+    <!-- KPI Skeleton -->
+    <div class="product-list__toolbar" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+    </div>
+
+    <!-- Product Grid Skeleton -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem;">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <app-skeleton width="100%" height="280px" radius="0.5rem" />
+      }
+    </div>
+  } @else {
+  <!-- Header -->
+  <div class="product-list__header">
+    <div class="product-list__header-left">
+      <h1 class="page__title">Products</h1>
+      <span class="product-list__count">{{ totalFiltered() }} products</span>
+    </div>
+    <a routerLink="/products/new" class="btn btn--primary">
+      + Add Product
+    </a>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="product-list__toolbar">
+    <div class="product-list__toolbar-left">
+      <app-search-input
+        placeholder="Search products..."
+        (searchChange)="onSearch($event)" />
+
+      <select
+        class="product-list__select"
+        [value]="categoryFilter()"
+        (change)="setCategory($any($event.target).value)">
+        <option value="">All Categories</option>
+        @for (cat of categories(); track cat) {
+          <option [value]="cat">{{ cat }}</option>
+        }
+      </select>
+
+      <select
+        class="product-list__select"
+        [value]="sortField() + ':' + sortDir()"
+        (change)="setSort($any($event.target).value.split(':')[0])">
+        <option value="name:asc">Name A-Z</option>
+        <option value="price:asc">Price Low-High</option>
+        <option value="stock:asc">Stock Low-High</option>
+        <option value="salesCount:asc">Sales Low-High</option>
+      </select>
+
+      <div class="product-list__price-range">
+        <input
+          type="number"
+          class="product-list__price-input"
+          placeholder="Min $"
+          [value]="priceMin()"
+          (input)="setPriceMin($event)" />
+        <span class="product-list__price-sep">-</span>
+        <input
+          type="number"
+          class="product-list__price-input"
+          placeholder="Max $"
+          [value]="priceMax()"
+          (input)="setPriceMax($event)" />
+      </div>
+    </div>
+
+    <div class="product-list__toolbar-right">
+      <div class="product-list__view-toggle">
+        <button
+          class="btn btn--ghost btn--sm"
+          [class.product-list__view-toggle--active]="viewMode() === 'grid'"
+          (click)="toggleView('grid')"
+          title="Grid view">
+          &#9638;&#9638;
+        </button>
+        <button
+          class="btn btn--ghost btn--sm"
+          [class.product-list__view-toggle--active]="viewMode() === 'list'"
+          (click)="toggleView('list')"
+          title="List view">
+          &#9776;
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="product-list__tabs">
+    <button
+      class="product-list__tab"
+      [class.product-list__tab--active]="statusTab() === 'all'"
+      (click)="setStatusTab('all')">
+      All
+    </button>
+    <button
+      class="product-list__tab"
+      [class.product-list__tab--active]="statusTab() === 'active'"
+      (click)="setStatusTab('active')">
+      Active
+    </button>
+    <button
+      class="product-list__tab"
+      [class.product-list__tab--active]="statusTab() === 'draft'"
+      (click)="setStatusTab('draft')">
+      Draft
+    </button>
+    <button
+      class="product-list__tab"
+      [class.product-list__tab--active]="statusTab() === 'archived'"
+      (click)="setStatusTab('archived')">
+      Archived
+    </button>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  @if (selectionCount() > 0) {
+    <div class="product-list__bulk-bar">
+      <span class="product-list__bulk-count">{{ selectionCount() }} selected</span>
+      <div class="product-list__bulk-actions">
+        <button class="btn btn--secondary btn--sm" (click)="bulkSetStatus('active')">Set Active</button>
+        <button class="btn btn--secondary btn--sm" (click)="bulkSetStatus('draft')">Set Draft</button>
+        <button class="btn btn--secondary btn--sm" (click)="bulkSetStatus('archived')">Archive</button>
+        <button class="btn btn--danger btn--sm" (click)="confirmBulkDelete()">Delete</button>
+        <button class="btn btn--ghost btn--sm" (click)="clearSelection()">Cancel</button>
+      </div>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (paginatedProducts().length === 0) {
+    <app-empty-state
+      icon="📦"
+      title="No products found"
+      message="Try adjusting your search or filter criteria.">
+    </app-empty-state>
+  } @else {
+    <!-- Grid View -->
+    @if (viewMode() === 'grid') {
+      <div class="product-grid">
+        @for (product of paginatedProducts(); track product.id) {
+          <div class="product-card card">
+            <div class="product-card__select">
+              <input
+                type="checkbox"
+                [checked]="isSelected(product.id)"
+                (change)="toggleSelect(product.id)"
+                (click)="$event.stopPropagation()" />
+            </div>
+            <div class="product-card__image" (click)="navigateTo(product)">
+              @if (getPrimaryImage(product)) {
+                <img [src]="getPrimaryImage(product)" [alt]="product.name" />
+              } @else {
+                <div class="product-card__image-placeholder">📦</div>
+              }
+            </div>
+            <div class="product-card__body" (click)="navigateTo(product)">
+              <div class="product-card__top">
+                <span class="product-card__category">{{ product.category }}</span>
+                @let badge = product.status | statusBadge;
+                <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+              </div>
+              <h3 class="product-card__name">{{ product.name }}</h3>
+              <div class="product-card__price">
+                <span class="product-card__price-current">{{ product.price | currencyFormat }}</span>
+                @if (product.compareAtPrice) {
+                  <span class="product-card__price-compare">{{ product.compareAtPrice | currencyFormat }}</span>
+                }
+              </div>
+              <div class="product-card__meta">
+                <span class="product-card__stock" [class]="getStockClass(product)">
+                  @if (product.stock === 0) {
+                    Out of stock
+                  } @else if (product.stock <= product.lowStockThreshold) {
+                    Low: {{ product.stock }}
+                  } @else {
+                    In stock: {{ product.stock }}
+                  }
+                </span>
+                <span class="product-card__rating">
+                  @for (star of getStarArray(product.rating); track $index) {
+                    @if (star === 'full') {
+                      <span class="product-card__star product-card__star--full">&#9733;</span>
+                    } @else if (star === 'half') {
+                      <span class="product-card__star product-card__star--half">&#9733;</span>
+                    } @else {
+                      <span class="product-card__star product-card__star--empty">&#9734;</span>
+                    }
+                  }
+                  <span class="product-card__rating-count">({{ product.reviewCount }})</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- List View -->
+    @if (viewMode() === 'list') {
+      <div class="product-table card">
+        <table class="product-table__table">
+          <thead>
+            <tr>
+              <th class="product-table__th product-table__th--check">
+                <input type="checkbox" [checked]="allPageSelected()" (change)="toggleSelectAll()" />
+              </th>
+              <th class="product-table__th">Product</th>
+              <th class="product-table__th product-table__th--sortable" (click)="setSort('price')">
+                Price
+                @if (sortField() === 'price') {
+                  <span>{{ sortDir() === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                }
+              </th>
+              <th class="product-table__th product-table__th--sortable" (click)="setSort('stock')">
+                Stock
+                @if (sortField() === 'stock') {
+                  <span>{{ sortDir() === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                }
+              </th>
+              <th class="product-table__th product-table__th--sortable" (click)="setSort('salesCount')">
+                Sales
+                @if (sortField() === 'salesCount') {
+                  <span>{{ sortDir() === 'asc' ? '&#9650;' : '&#9660;' }}</span>
+                }
+              </th>
+              <th class="product-table__th">Rating</th>
+              <th class="product-table__th">Status</th>
+              <th class="product-table__th">Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of paginatedProducts(); track product.id) {
+              <tr class="product-table__row" (click)="navigateTo(product)">
+                <td class="product-table__td product-table__td--check" (click)="$event.stopPropagation()">
+                  <input type="checkbox" [checked]="isSelected(product.id)" (change)="toggleSelect(product.id)" />
+                </td>
+                <td class="product-table__td">
+                  <div class="product-table__product">
+                    <div class="product-table__thumb">
+                      @if (getPrimaryImage(product)) {
+                        <img [src]="getPrimaryImage(product)" [alt]="product.name" />
+                      } @else {
+                        <span>📦</span>
+                      }
+                    </div>
+                    <div class="product-table__info">
+                      <span class="product-table__name">{{ product.name }}</span>
+                      <span class="product-table__sku">{{ product.sku }} &middot; {{ product.category }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="product-table__td">{{ product.price | currencyFormat }}</td>
+                <td class="product-table__td">
+                  <span [class]="getStockClass(product)">{{ product.stock }}</span>
+                </td>
+                <td class="product-table__td">{{ product.salesCount }}</td>
+                <td class="product-table__td">
+                  <span class="product-table__rating-stars">
+                    @for (star of getStarArray(product.rating); track $index) {
+                      @if (star === 'full') {
+                        <span class="product-card__star product-card__star--full">&#9733;</span>
+                      } @else if (star === 'half') {
+                        <span class="product-card__star product-card__star--half">&#9733;</span>
+                      } @else {
+                        <span class="product-card__star product-card__star--empty">&#9734;</span>
+                      }
+                    }
+                  </span>
+                </td>
+                <td class="product-table__td">
+                  @let badge = product.status | statusBadge;
+                  <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+                </td>
+                <td class="product-table__td">{{ product.updatedAt | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Pagination -->
+    <div class="product-list__pagination">
+      <app-paginator
+        [total]="totalFiltered()"
+        [pageSize]="pageSize()"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)" />
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  <app-modal
+    [open]="showDeleteModal()"
+    title="Confirm Delete"
+    size="sm"
+    (close)="showDeleteModal.set(false)">
+    <p>Are you sure you want to delete {{ selectionCount() }} product(s)? This action cannot be undone.</p>
+    <div modal-footer>
+      <button class="btn btn--secondary" (click)="showDeleteModal.set(false)">Cancel</button>
+      <button class="btn btn--danger" (click)="bulkDelete()">Delete</button>
+    </div>
+  </app-modal>
+  }
+</div>

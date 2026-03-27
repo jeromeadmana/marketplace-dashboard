@@ -1,0 +1,105 @@
+import { Customer } from '../models';
+
+export const MOCK_CUSTOMERS: Customer[] = [
+  {
+    id: 'cust-001', name: 'Sarah Chen', email: 'sarah.chen@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=sarah', phone: '+1 (555) 123-4567',
+    segment: 'vip', tags: ['high-value', 'early-adopter'],
+    totalOrders: 23, totalSpent: 4567.89, averageOrderValue: 198.60,
+    lastOrderAt: '2026-03-25T14:00:00Z',
+    address: { city: 'San Francisco', state: 'CA', country: 'US' },
+    activities: [
+      { id: 'act-001', type: 'order', description: 'Placed order #ORD-1047', createdAt: '2026-03-25T14:00:00Z' },
+      { id: 'act-002', type: 'review', description: 'Left a 5-star review on Wireless Headphones', createdAt: '2026-03-20T09:00:00Z' },
+    ],
+    createdAt: '2025-02-14T10:00:00Z',
+  },
+  {
+    id: 'cust-002', name: 'Marcus Johnson', email: 'marcus.j@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=marcus', phone: '+1 (555) 234-5678',
+    segment: 'returning', tags: ['electronics-fan'],
+    totalOrders: 8, totalSpent: 1234.56, averageOrderValue: 154.32,
+    lastOrderAt: '2026-03-22T10:00:00Z',
+    address: { city: 'Austin', state: 'TX', country: 'US' },
+    activities: [
+      { id: 'act-003', type: 'order', description: 'Placed order #ORD-1042', createdAt: '2026-03-22T10:00:00Z' },
+      { id: 'act-004', type: 'support', description: 'Requested return for order #ORD-1038', createdAt: '2026-03-18T11:00:00Z' },
+    ],
+    createdAt: '2025-08-05T08:00:00Z',
+  },
+  {
+    id: 'cust-003', name: 'Emily Rodriguez', email: 'emily.r@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=emily',
+    segment: 'vip', tags: ['high-value', 'fashion'],
+    totalOrders: 31, totalSpent: 6789.12, averageOrderValue: 219.00,
+    lastOrderAt: '2026-03-27T16:00:00Z',
+    address: { city: 'New York', state: 'NY', country: 'US' },
+    activities: [
+      { id: 'act-005', type: 'order', description: 'Placed order #ORD-1050', createdAt: '2026-03-27T16:00:00Z' },
+      { id: 'act-006', type: 'login', description: 'Logged in from mobile', createdAt: '2026-03-27T15:45:00Z' },
+    ],
+    createdAt: '2025-01-20T12:00:00Z',
+  },
+  {
+    id: 'cust-004', name: 'David Kim', email: 'david.kim@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=david',
+    segment: 'new', tags: [],
+    totalOrders: 1, totalSpent: 79.99, averageOrderValue: 79.99,
+    lastOrderAt: '2026-03-26T09:00:00Z',
+    address: { city: 'Seattle', state: 'WA', country: 'US' },
+    activities: [
+      { id: 'act-007', type: 'order', description: 'Placed first order #ORD-1048', createdAt: '2026-03-26T09:00:00Z' },
+    ],
+    createdAt: '2026-03-26T08:30:00Z',
+  },
+  {
+    id: 'cust-005', name: 'Aisha Patel', email: 'aisha.p@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=aisha', phone: '+1 (555) 345-6789',
+    segment: 'returning', tags: ['home-decor'],
+    totalOrders: 12, totalSpent: 2345.67, averageOrderValue: 195.47,
+    lastOrderAt: '2026-03-20T11:00:00Z',
+    address: { city: 'Chicago', state: 'IL', country: 'US' },
+    activities: [
+      { id: 'act-008', type: 'review', description: 'Left a 4-star review on Ceramic Mug Set', createdAt: '2026-03-21T10:00:00Z' },
+      { id: 'act-009', type: 'order', description: 'Placed order #ORD-1040', createdAt: '2026-03-20T11:00:00Z' },
+    ],
+    createdAt: '2025-06-10T14:00:00Z',
+  },
+  {
+    id: 'cust-006', name: 'James O\'Brien', email: 'james.ob@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=james',
+    segment: 'returning', tags: ['sports', 'fitness'],
+    totalOrders: 6, totalSpent: 890.45, averageOrderValue: 148.41,
+    lastOrderAt: '2026-03-15T13:00:00Z',
+    address: { city: 'Denver', state: 'CO', country: 'US' },
+    activities: [
+      { id: 'act-010', type: 'order', description: 'Placed order #ORD-1035', createdAt: '2026-03-15T13:00:00Z' },
+    ],
+    createdAt: '2025-10-22T09:00:00Z',
+  },
+  {
+    id: 'cust-007', name: 'Lisa Wang', email: 'lisa.w@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=lisa', phone: '+1 (555) 456-7890',
+    segment: 'vip', tags: ['high-value', 'tech'],
+    totalOrders: 19, totalSpent: 5432.10, averageOrderValue: 285.90,
+    lastOrderAt: '2026-03-24T17:00:00Z',
+    address: { city: 'Los Angeles', state: 'CA', country: 'US' },
+    activities: [
+      { id: 'act-011', type: 'order', description: 'Placed order #ORD-1045', createdAt: '2026-03-24T17:00:00Z' },
+      { id: 'act-012', type: 'return', description: 'Returned item from order #ORD-1039', createdAt: '2026-03-19T08:00:00Z' },
+    ],
+    createdAt: '2025-04-15T11:00:00Z',
+  },
+  {
+    id: 'cust-008', name: 'Tom Nguyen', email: 'tom.n@email.com',
+    avatar: 'https://i.pravatar.cc/150?u=tom',
+    segment: 'new', tags: [],
+    totalOrders: 2, totalSpent: 164.98, averageOrderValue: 82.49,
+    lastOrderAt: '2026-03-23T12:00:00Z',
+    address: { city: 'Portland', state: 'OR', country: 'US' },
+    activities: [
+      { id: 'act-013', type: 'order', description: 'Placed order #ORD-1044', createdAt: '2026-03-23T12:00:00Z' },
+    ],
+    createdAt: '2026-03-10T10:00:00Z',
+  },
+];

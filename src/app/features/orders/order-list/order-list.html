@@ -1,0 +1,132 @@
+<div class="order-list">
+  @if (loading()) {
+    <!-- Skeleton Loading State -->
+    <div class="order-list__header">
+      <app-skeleton width="120px" height="32px" />
+      <app-skeleton width="130px" height="40px" radius="0.5rem" />
+    </div>
+
+    <!-- Tab Bar Skeleton -->
+    <app-skeleton width="100%" height="40px" radius="0.5rem" />
+
+    <!-- Table Rows Skeleton -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem;">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <app-skeleton width="100%" height="48px" radius="0.375rem" />
+      }
+    </div>
+  } @else {
+  <div class="order-list__header">
+    <h1 class="page__title">Orders</h1>
+    <button class="btn btn--secondary" (click)="exportCsv()">
+      <span>&#128229;</span> Export CSV
+    </button>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="order-list__tabs">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="order-list__tab"
+        [class.order-list__tab--active]="activeTab() === tab.key"
+        (click)="setTab(tab.key)">
+        {{ tab.label }}
+        <span class="order-list__tab-count">{{ getTabCount(tab.key) }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="order-list__filters">
+    <div class="order-list__search">
+      <app-search-input
+        placeholder="Search by order # or customer..."
+        (searchChange)="onSearch($event)" />
+    </div>
+    <div class="order-list__filter-group">
+      <label class="order-list__filter-label">From</label>
+      <input type="date" class="order-list__filter-input" (change)="onDateFrom($event)" />
+    </div>
+    <div class="order-list__filter-group">
+      <label class="order-list__filter-label">To</label>
+      <input type="date" class="order-list__filter-input" (change)="onDateTo($event)" />
+    </div>
+    <div class="order-list__filter-group">
+      <label class="order-list__filter-label">Payment</label>
+      <select class="order-list__filter-input" (change)="onPaymentFilter($event)">
+        <option value="">All</option>
+        <option value="pending">Pending</option>
+        <option value="paid">Paid</option>
+        <option value="failed">Failed</option>
+        <option value="refunded">Refunded</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table -->
+  @if (paginatedOrders().length > 0) {
+    <div class="card order-list__table-wrap">
+      <div class="order-list__table-scroll">
+        <table class="order-list__table">
+          <thead>
+            <tr>
+              <th class="order-list__th order-list__th--sortable" (click)="toggleSort('orderNumber')">
+                Order {{ getSortIcon('orderNumber') }}
+              </th>
+              <th class="order-list__th order-list__th--sortable" (click)="toggleSort('customerName')">
+                Customer {{ getSortIcon('customerName') }}
+              </th>
+              <th class="order-list__th">Items</th>
+              <th class="order-list__th order-list__th--sortable order-list__th--right" (click)="toggleSort('total')">
+                Total {{ getSortIcon('total') }}
+              </th>
+              <th class="order-list__th">Status</th>
+              <th class="order-list__th">Payment</th>
+              <th class="order-list__th order-list__th--sortable" (click)="toggleSort('createdAt')">
+                Date {{ getSortIcon('createdAt') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of paginatedOrders(); track order.id) {
+              @let orderBadge = order.status | statusBadge;
+              @let paymentBadge = order.paymentStatus | statusBadge;
+              <tr class="order-list__row" (click)="goToDetail(order)">
+                <td class="order-list__td order-list__td--order">{{ order.orderNumber }}</td>
+                <td class="order-list__td">
+                  <div class="order-list__customer">
+                    <span class="order-list__customer-name">{{ order.customerName }}</span>
+                    <span class="order-list__customer-email">{{ order.customerEmail }}</span>
+                  </div>
+                </td>
+                <td class="order-list__td">{{ order.items.length }}</td>
+                <td class="order-list__td order-list__td--right">{{ order.total | currencyFormat }}</td>
+                <td class="order-list__td">
+                  <app-badge [label]="orderBadge.label" [cssClass]="orderBadge.cssClass" />
+                </td>
+                <td class="order-list__td">
+                  <app-badge [label]="paymentBadge.label" [cssClass]="paymentBadge.cssClass" />
+                </td>
+                <td class="order-list__td">{{ order.createdAt | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-paginator
+        [total]="totalFiltered()"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)" />
+    </div>
+  } @else {
+    <div class="card">
+      <app-empty-state
+        icon="&#128230;"
+        title="No orders found"
+        message="Try adjusting your filters or search query." />
+    </div>
+  }
+  }
+</div>

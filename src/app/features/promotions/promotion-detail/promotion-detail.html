@@ -1,0 +1,110 @@
+@if (promo(); as p) {
+  <div class="promo-detail">
+    <!-- Back + Actions -->
+    <div class="promo-detail__top-bar">
+      <button class="btn btn--ghost" (click)="goBack()">
+        &larr; Back to Promotions
+      </button>
+      <div class="promo-detail__top-actions">
+        <a [routerLink]="['/promotions', p.id, 'edit']" class="btn btn--secondary">Edit</a>
+        <button
+          class="btn btn--secondary"
+          (click)="toggleStatus()">
+          @if (p.status === 'active') {
+            Disable
+          } @else {
+            Enable
+          }
+        </button>
+        <button class="btn btn--danger" (click)="confirmDelete()">Delete</button>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="promo-detail__header card">
+      <div class="promo-detail__header-main">
+        <h1 class="promo-detail__name">{{ p.name }}</h1>
+        <div class="promo-detail__header-meta">
+          <div class="promo-detail__code-wrap" (click)="copyCode()" title="Click to copy">
+            <code class="promo-detail__code">{{ p.code }}</code>
+            <span class="promo-detail__copy-hint">
+              @if (codeCopied()) {
+                Copied!
+              } @else {
+                Click to copy
+              }
+            </span>
+          </div>
+          @let badge = p.status | statusBadge;
+          <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+        </div>
+      </div>
+      @if (p.description) {
+        <p class="promo-detail__description">{{ p.description }}</p>
+      }
+    </div>
+
+    <!-- Info Grid -->
+    <div class="promo-detail__grid">
+      <div class="promo-detail__info-card card">
+        <h3 class="promo-detail__info-title">Discount</h3>
+        <span class="promo-detail__discount">{{ discountDisplay() }}</span>
+        <span class="promo-detail__discount-type">
+          @if (p.discountType === 'percentage') {
+            Percentage discount
+          } @else {
+            Fixed amount discount
+          }
+        </span>
+      </div>
+
+      <div class="promo-detail__info-card card">
+        <h3 class="promo-detail__info-title">Date Range</h3>
+        <span class="promo-detail__date-range">{{ dateRange() }}</span>
+      </div>
+
+      <div class="promo-detail__info-card card">
+        <h3 class="promo-detail__info-title">Conditions</h3>
+        <ul class="promo-detail__conditions">
+          @for (cond of conditionsList(); track cond) {
+            <li class="promo-detail__condition-item">{{ cond }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- Performance -->
+    <div class="promo-detail__performance card">
+      <div class="card__header">
+        <h2 class="card__title">Performance</h2>
+      </div>
+      <div class="promo-detail__perf-grid">
+        <div class="promo-detail__perf-item">
+          <span class="promo-detail__perf-label">Total Usage</span>
+          <span class="promo-detail__perf-value">{{ p.usageCount }}</span>
+        </div>
+        <div class="promo-detail__perf-item">
+          <span class="promo-detail__perf-label">Revenue Generated</span>
+          <span class="promo-detail__perf-value">{{ p.revenue | currencyFormat }}</span>
+        </div>
+        <div class="promo-detail__perf-item">
+          <span class="promo-detail__perf-label">Avg Order Value</span>
+          <span class="promo-detail__perf-value">{{ avgOrderValue() | currencyFormat }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <app-modal
+    [open]="showDeleteModal()"
+    title="Delete Promotion"
+    size="sm"
+    (close)="showDeleteModal.set(false)">
+    <p>Are you sure you want to delete <strong>{{ p.name }}</strong>? This action cannot be undone.</p>
+    <div modal-footer>
+      <button class="btn btn--secondary" (click)="showDeleteModal.set(false)">Cancel</button>
+      <button class="btn btn--danger" (click)="executeDelete()">Delete</button>
+    </div>
+  </app-modal>
+}

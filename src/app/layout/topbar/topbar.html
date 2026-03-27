@@ -1,0 +1,83 @@
+<header class="topbar" [style.padding-left]="sidebarCollapsed() ? '68px' : '260px'">
+  <div class="topbar__left">
+    <button class="topbar__menu-btn btn--ghost btn--icon" (click)="toggleMobileSidebar.emit()">
+      ☰
+    </button>
+    <ng-content select="[breadcrumbs]" />
+  </div>
+
+  <div class="topbar__right">
+    <!-- Theme toggle -->
+    <button class="topbar__action btn--ghost btn--icon" (click)="theme.toggle()">
+      {{ theme.theme() === 'light' ? '🌙' : '☀️' }}
+    </button>
+
+    <!-- Notifications -->
+    <div class="topbar__dropdown" (appClickOutside)="closeNotifications()">
+      <button class="topbar__action btn--ghost btn--icon" (click)="toggleNotificationPanel()">
+        🔔
+        @if (notifications.unreadCount() > 0) {
+          <span class="topbar__badge">{{ notifications.unreadCount() }}</span>
+        }
+      </button>
+
+      @if (showNotifications()) {
+        <div class="topbar__panel topbar__panel--notifications">
+          <div class="topbar__panel-header">
+            <strong>Notifications</strong>
+            <button class="btn btn--ghost btn--sm" (click)="notifications.markAllAsRead()">Mark all read</button>
+          </div>
+          <div class="topbar__panel-body">
+            @for (notif of notifications.allNotifications(); track notif.id) {
+              <a
+                class="topbar__notif"
+                [class.topbar__notif--unread]="!notif.isRead"
+                [routerLink]="notif.link ?? null"
+                (click)="notifications.markAsRead(notif.id); closeNotifications()">
+                <span class="topbar__notif-dot" [class]="'topbar__notif-dot--' + notif.type"></span>
+                <div class="topbar__notif-content">
+                  <strong>{{ notif.title }}</strong>
+                  <p>{{ notif.message }}</p>
+                  <small>{{ notif.createdAt | relativeTime }}</small>
+                </div>
+              </a>
+            } @empty {
+              <p class="topbar__panel-empty">No notifications</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- User menu -->
+    <div class="topbar__dropdown" (appClickOutside)="closeUserMenu()">
+      <button class="topbar__user-btn" (click)="toggleUserPanel()">
+        @if (auth.user(); as user) {
+          <img [src]="user.avatar" [alt]="user.name" class="topbar__avatar" />
+          <span class="topbar__user-name">{{ user.name }}</span>
+        }
+      </button>
+
+      @if (showUserMenu()) {
+        <div class="topbar__panel topbar__panel--user">
+          @if (auth.user(); as user) {
+            <div class="topbar__user-info">
+              <strong>{{ user.name }}</strong>
+              <small>{{ user.email }}</small>
+              <span class="topbar__role-badge">{{ user.role | uppercase }}</span>
+            </div>
+          }
+          <div class="topbar__panel-actions">
+            <button class="topbar__panel-action" (click)="auth.switchRole('admin'); closeUserMenu()">Switch to Admin</button>
+            <button class="topbar__panel-action" (click)="auth.switchRole('manager'); closeUserMenu()">Switch to Manager</button>
+            <button class="topbar__panel-action" (click)="auth.switchRole('viewer'); closeUserMenu()">Switch to Viewer</button>
+          </div>
+          <div class="topbar__panel-footer">
+            <a routerLink="/settings" (click)="closeUserMenu()">Settings</a>
+            <button (click)="logout()">Logout</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</header>

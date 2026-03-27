@@ -1,0 +1,85 @@
+.data-table-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead {
+    background: var(--surface-secondary);
+
+    th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      user-select: none;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+
+      &:last-child { border-bottom: none; }
+      &:hover { background: var(--surface-hover); }
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+  }
+
+  &__sortable {
+    cursor: pointer;
+
+    &:hover { color: var(--primary); }
+  }
+
+  &__sort-icon {
+    font-size: 0.625rem;
+    margin-left: 0.25rem;
+    vertical-align: middle;
+  }
+
+  &__check {
+    width: 2.5rem;
+    text-align: center !important;
+
+    input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+  }
+
+  &__row--selected {
+    background: var(--primary-light) !important;
+  }
+
+  &__empty {
+    text-align: center !important;
+    padding: 3rem 1rem !important;
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+}
+
+app-paginator {
+  padding: 0 1rem;
+  border-top: 1px solid var(--border);
+}

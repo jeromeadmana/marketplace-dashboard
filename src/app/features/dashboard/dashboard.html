@@ -1,0 +1,182 @@
+<div class="dashboard">
+  @if (loading()) {
+    <!-- Skeleton Loading State -->
+    <app-skeleton width="180px" height="32px" />
+
+    <!-- KPI Skeleton -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem;">
+      <app-skeleton width="100%" height="100px" radius="0.5rem" />
+      <app-skeleton width="100%" height="100px" radius="0.5rem" />
+      <app-skeleton width="100%" height="100px" radius="0.5rem" />
+      <app-skeleton width="100%" height="100px" radius="0.5rem" />
+    </div>
+
+    <!-- Chart Area Skeleton -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+      <app-skeleton width="100%" height="300px" radius="0.5rem" />
+      <app-skeleton width="100%" height="250px" radius="0.5rem" />
+    </div>
+  } @else {
+  <h1 class="dashboard__title">Dashboard</h1>
+
+  <!-- KPI Cards -->
+  <div class="dashboard__kpis">
+    <div class="card kpi-card" @fadeInUp>
+      <div class="kpi-card__label">Total Revenue</div>
+      <div class="kpi-card__value">{{ analytics.kpis.totalRevenue | currencyFormat }}</div>
+      <div class="kpi-card__change" [class.kpi-card__change--positive]="analytics.kpis.revenueChange > 0" [class.kpi-card__change--negative]="analytics.kpis.revenueChange < 0">
+        {{ analytics.kpis.revenueChange > 0 ? '+' : '' }}{{ analytics.kpis.revenueChange }}%
+      </div>
+    </div>
+    <div class="card kpi-card" @fadeInUp>
+      <div class="kpi-card__label">Total Orders</div>
+      <div class="kpi-card__value">{{ analytics.kpis.totalOrders | number }}</div>
+      <div class="kpi-card__change" [class.kpi-card__change--positive]="analytics.kpis.ordersChange > 0">
+        +{{ analytics.kpis.ordersChange }}%
+      </div>
+    </div>
+    <div class="card kpi-card" @fadeInUp>
+      <div class="kpi-card__label">Conversion Rate</div>
+      <div class="kpi-card__value">{{ analytics.kpis.conversionRate }}%</div>
+      <div class="kpi-card__change" [class.kpi-card__change--negative]="analytics.kpis.conversionChange < 0">
+        {{ analytics.kpis.conversionChange }}%
+      </div>
+    </div>
+    <div class="card kpi-card" @fadeInUp>
+      <div class="kpi-card__label">Avg. Order Value</div>
+      <div class="kpi-card__value">{{ analytics.kpis.averageOrderValue | currencyFormat }}</div>
+      <div class="kpi-card__change kpi-card__change--positive">
+        +{{ analytics.kpis.aovChange }}%
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard__grid">
+    <!-- Revenue Chart Placeholder -->
+    <div class="card dashboard__chart">
+      <div class="card__header">
+        <h3 class="card__title">Revenue (Last 30 Days)</h3>
+      </div>
+      <div class="chart-area">
+        <svg viewBox="0 0 600 200" class="chart-svg">
+          @for (point of analytics.revenueTimeSeries; track point.date; let i = $index) {
+            <rect
+              [attr.x]="i * 20"
+              [attr.y]="200 - (point.value / 15000) * 180"
+              width="16"
+              [attr.height]="(point.value / 15000) * 180"
+              class="chart-bar"
+              rx="2" />
+          }
+        </svg>
+      </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="card dashboard__breakdown">
+      <div class="card__header">
+        <h3 class="card__title">Sales by Category</h3>
+      </div>
+      @for (cat of analytics.categoryBreakdown; track cat.category) {
+        <div class="breakdown-row">
+          <div class="breakdown-row__info">
+            <span class="breakdown-row__name">{{ cat.category }}</span>
+            <span class="breakdown-row__value">{{ cat.revenue | currencyFormat: 'USD' : true }}</span>
+          </div>
+          <div class="breakdown-row__bar">
+            <div class="breakdown-row__fill" [style.width.%]="cat.percentage"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="card dashboard__orders">
+      <div class="card__header">
+        <h3 class="card__title">Recent Orders</h3>
+        <a routerLink="/orders" class="btn btn--ghost btn--sm">View all</a>
+      </div>
+      <table class="mini-table">
+        <tbody>
+          @for (order of recentOrders; track order.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/orders', order.id]" class="mini-table__link">{{ order.orderNumber }}</a>
+              </td>
+              <td>{{ order.customerName }}</td>
+              <td>{{ order.total | currencyFormat }}</td>
+              <td>
+                @let badge = order.status | statusBadge;
+                <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+              </td>
+              <td class="mini-table__time">{{ order.createdAt | relativeTime }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Top Products -->
+    <div class="card dashboard__top-products">
+      <div class="card__header">
+        <h3 class="card__title">Top Products</h3>
+        <a routerLink="/products" class="btn btn--ghost btn--sm">View all</a>
+      </div>
+      @for (product of topProducts; track product.productId; let i = $index) {
+        <div class="top-product">
+          <span class="top-product__rank">{{ i + 1 }}</span>
+          <div class="top-product__info">
+            <span class="top-product__name">{{ product.name }}</span>
+            <span class="top-product__units">{{ product.units }} units sold</span>
+          </div>
+          <span class="top-product__revenue">{{ product.revenue | currencyFormat: 'USD' : true }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="card dashboard__feed">
+      <div class="card__header">
+        <h3 class="card__title">Live Activity</h3>
+        <span class="feed-dot"></span>
+      </div>
+      <div class="feed-list" @listAnimation>
+        @for (event of activityFeed.feed(); track event.id) {
+          <div class="feed-item">
+            <span class="feed-item__icon">
+              @switch (event.type) {
+                @case ('order') { 🛒 }
+                @case ('review') { ⭐ }
+                @case ('signup') { 👤 }
+                @case ('refund') { 💸 }
+                @case ('stock') { 📦 }
+              }
+            </span>
+            <span class="feed-item__msg">{{ event.message }}</span>
+            <span class="feed-item__time">{{ event.timestamp | relativeTime }}</span>
+          </div>
+        } @empty {
+          <p class="feed-empty">Waiting for activity...</p>
+        }
+      </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    @if (lowStockProducts.length > 0) {
+      <div class="card dashboard__alerts">
+        <div class="card__header">
+          <h3 class="card__title">Low Stock Alerts</h3>
+        </div>
+        @for (product of lowStockProducts; track product.id) {
+          <div class="alert-row">
+            <span class="alert-row__name">{{ product.name }}</span>
+            <span class="alert-row__stock" [class.alert-row__stock--critical]="product.stock <= product.lowStockThreshold">
+              {{ product.stock }} left
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+  }
+</div>

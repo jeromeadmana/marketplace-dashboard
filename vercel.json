@@ -1,0 +1,8 @@
+{
+  "buildCommand": "ng build",
+  "outputDirectory": "dist/marketplace-dashboard/browser",
+  "framework": "angular",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

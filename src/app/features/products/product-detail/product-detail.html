@@ -1,0 +1,253 @@
+@if (product(); as product) {
+  <div class="product-detail">
+    <!-- Header -->
+    <div class="product-detail__header">
+      <button class="btn btn--ghost" (click)="goBack()">&#8592; Back to Products</button>
+      <a [routerLink]="['/products', product.id, 'edit']" class="btn btn--primary">Edit Product</a>
+    </div>
+
+    <div class="product-detail__layout">
+      <!-- Main Content -->
+      <div class="product-detail__main">
+        <!-- Hero Section -->
+        <div class="product-detail__hero card">
+          <div class="product-detail__images">
+            <div class="product-detail__image-main">
+              @if (primaryImage()) {
+                <img [src]="primaryImage()" [alt]="product.name" />
+              } @else {
+                <div class="product-detail__image-placeholder">📦</div>
+              }
+            </div>
+            @if (product.images.length > 1) {
+              <div class="product-detail__image-thumbs">
+                @for (img of product.images; track img.id; let i = $index) {
+                  <button
+                    class="product-detail__image-thumb"
+                    [class.product-detail__image-thumb--active]="selectedImageIndex() === i"
+                    (click)="selectImage(i)">
+                    <img [src]="img.url" [alt]="img.alt" />
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <div class="product-detail__hero-info">
+            <div class="product-detail__hero-top">
+              <span class="product-detail__category">{{ product.category }}</span>
+              @let badge = product.status | statusBadge;
+              <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+            </div>
+            <h1 class="product-detail__name">{{ product.name }}</h1>
+            <div class="product-detail__price">
+              <span class="product-detail__price-current">{{ product.price | currencyFormat }}</span>
+              @if (product.compareAtPrice) {
+                <span class="product-detail__price-compare">{{ product.compareAtPrice | currencyFormat }}</span>
+              }
+            </div>
+            <div class="product-detail__rating">
+              @for (star of getStarArray(product.rating); track $index) {
+                @if (star === 'full') {
+                  <span class="star star--full">&#9733;</span>
+                } @else if (star === 'half') {
+                  <span class="star star--half">&#9733;</span>
+                } @else {
+                  <span class="star star--empty">&#9734;</span>
+                }
+              }
+              <span class="product-detail__review-count">{{ product.rating }} ({{ product.reviewCount }} reviews)</span>
+            </div>
+            <p class="product-detail__description">{{ product.description }}</p>
+            <div class="product-detail__sku">
+              <span>SKU: {{ product.sku }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="product-detail__tabs">
+          <button
+            class="product-detail__tab"
+            [class.product-detail__tab--active]="activeTab() === 'details'"
+            (click)="setTab('details')">
+            Details
+          </button>
+          <button
+            class="product-detail__tab"
+            [class.product-detail__tab--active]="activeTab() === 'variants'"
+            (click)="setTab('variants')">
+            Variants ({{ product.variants.length }})
+          </button>
+          <button
+            class="product-detail__tab"
+            [class.product-detail__tab--active]="activeTab() === 'reviews'"
+            (click)="setTab('reviews')">
+            Reviews
+          </button>
+        </div>
+
+        <!-- Tab Content: Details -->
+        @if (activeTab() === 'details') {
+          <div class="product-detail__tab-content card">
+            <div class="detail-grid">
+              <div class="detail-grid__item">
+                <span class="detail-grid__label">Category</span>
+                <span class="detail-grid__value">{{ product.category }}</span>
+              </div>
+              @if (product.subcategory) {
+                <div class="detail-grid__item">
+                  <span class="detail-grid__label">Subcategory</span>
+                  <span class="detail-grid__value">{{ product.subcategory }}</span>
+                </div>
+              }
+              <div class="detail-grid__item">
+                <span class="detail-grid__label">Price</span>
+                <span class="detail-grid__value">{{ product.price | currencyFormat }}</span>
+              </div>
+              @if (product.cost) {
+                <div class="detail-grid__item">
+                  <span class="detail-grid__label">Cost</span>
+                  <span class="detail-grid__value">{{ product.cost | currencyFormat }}</span>
+                </div>
+              }
+              @if (profit() !== null) {
+                <div class="detail-grid__item">
+                  <span class="detail-grid__label">Profit</span>
+                  <span class="detail-grid__value">{{ profit() | currencyFormat }} ({{ margin() | number:'1.1-1' }}%)</span>
+                </div>
+              }
+              <div class="detail-grid__item">
+                <span class="detail-grid__label">Total Sales</span>
+                <span class="detail-grid__value">{{ product.salesCount }}</span>
+              </div>
+              <div class="detail-grid__item">
+                <span class="detail-grid__label">Revenue</span>
+                <span class="detail-grid__value">{{ product.revenue | currencyFormat }}</span>
+              </div>
+            </div>
+            @if (product.seoTitle || product.seoDescription) {
+              <div class="detail-seo">
+                <h4 class="detail-seo__title">SEO</h4>
+                @if (product.seoTitle) {
+                  <p class="detail-seo__field"><strong>Title:</strong> {{ product.seoTitle }}</p>
+                }
+                @if (product.seoDescription) {
+                  <p class="detail-seo__field"><strong>Description:</strong> {{ product.seoDescription }}</p>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Tab Content: Variants -->
+        @if (activeTab() === 'variants') {
+          <div class="product-detail__tab-content card">
+            @if (product.variants.length === 0) {
+              <p class="product-detail__no-data">No variants defined for this product.</p>
+            } @else {
+              <table class="variant-table">
+                <thead>
+                  <tr>
+                    <th>Variant</th>
+                    <th>SKU</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Attributes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (variant of product.variants; track variant.id) {
+                    <tr>
+                      <td class="variant-table__name">{{ variant.name }}</td>
+                      <td>{{ variant.sku }}</td>
+                      <td>{{ variant.price | currencyFormat }}</td>
+                      <td>{{ variant.stock }}</td>
+                      <td>
+                        @for (entry of getAttributeEntries(variant.attributes); track entry.key) {
+                          <span class="variant-table__attr">{{ entry.key }}: {{ entry.value }}</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        }
+
+        <!-- Tab Content: Reviews -->
+        @if (activeTab() === 'reviews') {
+          <div class="product-detail__tab-content card">
+            <div class="reviews-summary">
+              <div class="reviews-summary__score">
+                <span class="reviews-summary__number">{{ product.rating }}</span>
+                <div class="reviews-summary__stars">
+                  @for (star of getStarArray(product.rating); track $index) {
+                    @if (star === 'full') {
+                      <span class="star star--full">&#9733;</span>
+                    } @else if (star === 'half') {
+                      <span class="star star--half">&#9733;</span>
+                    } @else {
+                      <span class="star star--empty">&#9734;</span>
+                    }
+                  }
+                </div>
+                <span class="reviews-summary__count">Based on {{ product.reviewCount }} reviews</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <div class="product-detail__sidebar">
+        <div class="sidebar-card card">
+          <h3 class="sidebar-card__title">Stock Information</h3>
+          <div class="sidebar-card__item">
+            <span class="sidebar-card__label">Current Stock</span>
+            <span class="sidebar-card__value" [class]="getStockClass(product)">{{ product.stock }}</span>
+          </div>
+          <div class="sidebar-card__item">
+            <span class="sidebar-card__label">Low Stock Alert</span>
+            <span class="sidebar-card__value">{{ product.lowStockThreshold }}</span>
+          </div>
+          <div class="sidebar-card__item">
+            <span class="sidebar-card__label">Status</span>
+            <span class="sidebar-card__value">
+              @if (product.stock === 0) {
+                Out of Stock
+              } @else if (product.stock <= product.lowStockThreshold) {
+                Low Stock
+              } @else {
+                In Stock
+              }
+            </span>
+          </div>
+        </div>
+
+        <div class="sidebar-card card">
+          <h3 class="sidebar-card__title">Dates</h3>
+          <div class="sidebar-card__item">
+            <span class="sidebar-card__label">Created</span>
+            <span class="sidebar-card__value">{{ product.createdAt | relativeTime }}</span>
+          </div>
+          <div class="sidebar-card__item">
+            <span class="sidebar-card__label">Last Updated</span>
+            <span class="sidebar-card__value">{{ product.updatedAt | relativeTime }}</span>
+          </div>
+        </div>
+
+        @if (product.tags.length > 0) {
+          <div class="sidebar-card card">
+            <h3 class="sidebar-card__title">Tags</h3>
+            <div class="sidebar-card__tags">
+              @for (tag of product.tags; track tag) {
+                <span class="sidebar-card__tag">{{ tag }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

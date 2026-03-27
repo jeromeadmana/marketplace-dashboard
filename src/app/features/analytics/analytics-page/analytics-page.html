@@ -1,0 +1,343 @@
+<div class="analytics">
+  <div class="analytics__header">
+    <h1 class="analytics__title">Analytics</h1>
+    <div class="analytics__period-selector">
+      @for (p of periods; track p.value) {
+        <button
+          class="btn btn--sm analytics__period-btn"
+          [class.analytics__period-btn--active]="selectedPeriod() === p.value"
+          (click)="selectPeriod(p.value)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="analytics__kpis">
+    <div class="card kpi-card">
+      <div class="kpi-card__label">Revenue</div>
+      <div class="kpi-card__value">{{ kpis().totalRevenue | currencyFormat }}</div>
+      <div class="kpi-card__change"
+           [class.kpi-card__change--positive]="kpis().revenueChange > 0"
+           [class.kpi-card__change--negative]="kpis().revenueChange < 0">
+        {{ kpis().revenueChange > 0 ? '+ ' : '' }}{{ kpis().revenueChange }}% vs prior period
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-card__label">Orders</div>
+      <div class="kpi-card__value">{{ kpis().totalOrders | number }}</div>
+      <div class="kpi-card__change"
+           [class.kpi-card__change--positive]="kpis().ordersChange > 0"
+           [class.kpi-card__change--negative]="kpis().ordersChange < 0">
+        {{ kpis().ordersChange > 0 ? '+ ' : '' }}{{ kpis().ordersChange }}% vs prior period
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-card__label">Conversion Rate</div>
+      <div class="kpi-card__value">{{ kpis().conversionRate }}%</div>
+      <div class="kpi-card__change"
+           [class.kpi-card__change--positive]="kpis().conversionChange > 0"
+           [class.kpi-card__change--negative]="kpis().conversionChange < 0">
+        {{ kpis().conversionChange > 0 ? '+ ' : '' }}{{ kpis().conversionChange }}% vs prior period
+      </div>
+    </div>
+    <div class="card kpi-card">
+      <div class="kpi-card__label">Avg. Order Value</div>
+      <div class="kpi-card__value">{{ kpis().averageOrderValue | currencyFormat }}</div>
+      <div class="kpi-card__change"
+           [class.kpi-card__change--positive]="kpis().aovChange > 0"
+           [class.kpi-card__change--negative]="kpis().aovChange < 0">
+        {{ kpis().aovChange > 0 ? '+ ' : '' }}{{ kpis().aovChange }}% vs prior period
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Chart -->
+  @defer (on viewport) {
+    <div class="card analytics__chart">
+      <div class="card__header">
+        <h3 class="card__title">Revenue Trend</h3>
+      </div>
+      <div class="chart-container">
+        <svg [attr.viewBox]="chartViewBox" class="chart-svg" preserveAspectRatio="xMidYMid meet">
+          <!-- Y axis grid lines -->
+          @for (label of yAxisLabels(); track label.label) {
+            <line
+              [attr.x1]="chartPadding.left"
+              [attr.y1]="label.y"
+              x2="780"
+              [attr.y2]="label.y"
+              class="chart-svg__grid-line" />
+            <text
+              [attr.x]="chartPadding.left - 8"
+              [attr.y]="label.y + 4"
+              class="chart-svg__y-label">
+              {{ label.label }}
+            </text>
+          }
+
+          <!-- X axis labels -->
+          @for (label of xAxisLabels(); track label.label) {
+            <text
+              [attr.x]="label.x"
+              [attr.y]="300 - 10"
+              class="chart-svg__x-label">
+              {{ label.label }}
+            </text>
+          }
+
+          <!-- Area fill -->
+          <path [attr.d]="areaPath()" class="chart-svg__area" />
+
+          <!-- Line -->
+          <polyline
+            [attr.points]="polylinePoints()"
+            class="chart-svg__line" />
+
+          <!-- Data points with tooltips -->
+          @for (pt of chartPoints(); track pt.date) {
+            <circle
+              [attr.cx]="pt.x"
+              [attr.cy]="pt.y"
+              r="3"
+              class="chart-svg__dot">
+              <title>{{ pt.date }}: ${{ pt.value | number:'1.2-2' }}</title>
+            </circle>
+          }
+        </svg>
+      </div>
+    </div>
+  } @placeholder {
+    <div class="card analytics__chart">
+      <div class="card__header">
+        <h3 class="card__title">Revenue Trend</h3>
+      </div>
+      <app-skeleton width="100%" height="280px" />
+    </div>
+  }
+
+  <div class="analytics__grid">
+    <!-- Category Breakdown -->
+    @defer (on viewport) {
+      <div class="card analytics__categories">
+        <div class="card__header">
+          <h3 class="card__title">Category Breakdown</h3>
+        </div>
+        <div class="category-list">
+          @for (cat of categories(); track cat.category; let i = $index) {
+            <div class="category-item">
+              <div class="category-item__header">
+                <span class="category-item__name">{{ cat.category }}</span>
+                <span class="category-item__value">{{ cat.revenue | currencyFormat:'USD':true }}</span>
+              </div>
+              <div class="category-item__bar-track">
+                <div
+                  class="category-item__bar-fill"
+                  [style.width.%]="(cat.revenue / maxCategoryRevenue()) * 100"
+                  [style.background]="categoryColors[i] || categoryColors[0]">
+                </div>
+              </div>
+              <div class="category-item__pct">{{ cat.percentage }}%</div>
+            </div>
+          }
+        </div>
+      </div>
+    } @placeholder {
+      <div class="card analytics__categories">
+        <div class="card__header">
+          <h3 class="card__title">Category Breakdown</h3>
+        </div>
+        <app-skeleton width="100%" height="240px" />
+      </div>
+    }
+
+    <!-- Conversion Funnel -->
+    @defer (on viewport) {
+      <div class="card analytics__funnel">
+        <div class="card__header">
+          <h3 class="card__title">Conversion Funnel</h3>
+        </div>
+        <div class="funnel-list">
+          @for (step of funnel(); track step.name; let i = $index) {
+            @let widthPct = step.percentage;
+            <div class="funnel-step">
+              <div class="funnel-step__info">
+                <span class="funnel-step__name">{{ step.name }}</span>
+                <span class="funnel-step__value">{{ step.value | number }} ({{ step.percentage }}%)</span>
+              </div>
+              <div class="funnel-step__bar-track">
+                <div
+                  class="funnel-step__bar-fill"
+                  [style.width.%]="widthPct">
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @placeholder {
+      <div class="card analytics__funnel">
+        <div class="card__header">
+          <h3 class="card__title">Conversion Funnel</h3>
+        </div>
+        <app-skeleton width="100%" height="240px" />
+      </div>
+    }
+  </div>
+
+  <div class="analytics__grid">
+    <!-- Geographic Distribution -->
+    @defer (on viewport) {
+      <div class="card analytics__geo">
+        <div class="card__header">
+          <h3 class="card__title">Geographic Distribution</h3>
+        </div>
+        <div class="geo-table-wrapper">
+          <table class="geo-table">
+            <thead>
+              <tr>
+                <th class="geo-table__th geo-table__th--sortable" (click)="sortGeo('region')">
+                  Region {{ getSortIcon('region') }}
+                </th>
+                <th class="geo-table__th geo-table__th--sortable" (click)="sortGeo('revenue')">
+                  Revenue {{ getSortIcon('revenue') }}
+                </th>
+                <th class="geo-table__th geo-table__th--sortable" (click)="sortGeo('orders')">
+                  Orders {{ getSortIcon('orders') }}
+                </th>
+                <th class="geo-table__th geo-table__th--sortable" (click)="sortGeo('customers')">
+                  Customers {{ getSortIcon('customers') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of sortedGeoData(); track row.region; let first = $first) {
+                <tr class="geo-table__row" [class.geo-table__row--top]="first && geoSortColumn() === 'revenue' && geoSortDir() === 'desc'">
+                  <td class="geo-table__td">{{ row.region }}</td>
+                  <td class="geo-table__td geo-table__td--revenue">
+                    <div class="geo-table__revenue-wrapper">
+                      <span>{{ row.revenue | currencyFormat:'USD':true }}</span>
+                      <div class="geo-table__inline-bar">
+                        <div
+                          class="geo-table__inline-bar-fill"
+                          [style.width.%]="(row.revenue / maxGeoRevenue()) * 100">
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="geo-table__td">{{ row.orders | number }}</td>
+                  <td class="geo-table__td">{{ row.customers | number }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @placeholder {
+      <div class="card analytics__geo">
+        <div class="card__header">
+          <h3 class="card__title">Geographic Distribution</h3>
+        </div>
+        <app-skeleton width="100%" height="320px" />
+      </div>
+    }
+
+    <!-- Top Products -->
+    @defer (on viewport) {
+      <div class="card analytics__top-products">
+        <div class="card__header">
+          <h3 class="card__title">Top Products</h3>
+        </div>
+        <div class="product-list">
+          @for (product of topProducts(); track product.productId; let i = $index) {
+            <div class="product-item">
+              <div class="product-item__rank">#{{ i + 1 }}</div>
+              <div class="product-item__details">
+                <div class="product-item__name">{{ product.name }}</div>
+                <div class="product-item__stats">
+                  <span class="product-item__revenue">{{ product.revenue | currencyFormat:'USD':true }}</span>
+                  <span class="product-item__units">{{ product.units | number }} units</span>
+                </div>
+                <div class="product-item__bar-track">
+                  <div
+                    class="product-item__bar-fill"
+                    [style.width.%]="(product.revenue / maxProductRevenue()) * 100">
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @placeholder {
+      <div class="card analytics__top-products">
+        <div class="card__header">
+          <h3 class="card__title">Top Products</h3>
+        </div>
+        <app-skeleton width="100%" height="320px" />
+      </div>
+    }
+  </div>
+
+  <!-- Comparison Section -->
+  @defer (on viewport) {
+    <div class="analytics__comparison">
+      <div class="card comparison-card">
+        <h3 class="comparison-card__title">This Period</h3>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">Revenue</span>
+          <span class="comparison-card__value">{{ comparison().current.revenue | currencyFormat }}</span>
+        </div>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">Orders</span>
+          <span class="comparison-card__value">{{ comparison().current.orders | number }}</span>
+        </div>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">AOV</span>
+          <span class="comparison-card__value">{{ comparison().current.aov | currencyFormat }}</span>
+        </div>
+      </div>
+
+      <div class="comparison-vs">
+        <div class="comparison-vs__arrows">
+          @if (comparison().current.revenue > comparison().previous.revenue) {
+            <div class="comparison-vs__arrow comparison-vs__arrow--up">Revenue &#9650;</div>
+          } @else {
+            <div class="comparison-vs__arrow comparison-vs__arrow--down">Revenue &#9660;</div>
+          }
+          @if (comparison().current.orders > comparison().previous.orders) {
+            <div class="comparison-vs__arrow comparison-vs__arrow--up">Orders &#9650;</div>
+          } @else {
+            <div class="comparison-vs__arrow comparison-vs__arrow--down">Orders &#9660;</div>
+          }
+          @if (comparison().current.aov > comparison().previous.aov) {
+            <div class="comparison-vs__arrow comparison-vs__arrow--up">AOV &#9650;</div>
+          } @else {
+            <div class="comparison-vs__arrow comparison-vs__arrow--down">AOV &#9660;</div>
+          }
+        </div>
+      </div>
+
+      <div class="card comparison-card">
+        <h3 class="comparison-card__title">Last Period</h3>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">Revenue</span>
+          <span class="comparison-card__value">{{ comparison().previous.revenue | currencyFormat }}</span>
+        </div>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">Orders</span>
+          <span class="comparison-card__value">{{ comparison().previous.orders | number }}</span>
+        </div>
+        <div class="comparison-card__row">
+          <span class="comparison-card__label">AOV</span>
+          <span class="comparison-card__value">{{ comparison().previous.aov | currencyFormat }}</span>
+        </div>
+      </div>
+    </div>
+  } @placeholder {
+    <div class="analytics__comparison">
+      <app-skeleton width="100%" height="180px" />
+    </div>
+  }
+</div>

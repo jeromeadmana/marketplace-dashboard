@@ -1,0 +1,161 @@
+<div class="promo-list">
+  <!-- Header -->
+  <div class="promo-list__header">
+    <div class="promo-list__header-left">
+      <h1 class="page__title">Promotions</h1>
+      <span class="promo-list__count">{{ totalFiltered() }} promotions</span>
+    </div>
+    <a routerLink="/promotions/new" class="btn btn--primary">
+      + Create Promotion
+    </a>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="promo-list__summary">
+    <div class="promo-list__summary-card card">
+      <span class="promo-list__summary-label">Total Active</span>
+      <span class="promo-list__summary-value promo-list__summary-value--active">{{ summaryActiveCount() }}</span>
+    </div>
+    <div class="promo-list__summary-card card">
+      <span class="promo-list__summary-label">Total Revenue</span>
+      <span class="promo-list__summary-value">{{ summaryTotalRevenue() | currencyFormat }}</span>
+    </div>
+    <div class="promo-list__summary-card card">
+      <span class="promo-list__summary-label">Total Usage</span>
+      <span class="promo-list__summary-value">{{ summaryTotalUsage() | number }}</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="promo-list__toolbar">
+    <app-search-input
+      placeholder="Search by name or code..."
+      (searchChange)="onSearch($event)" />
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="promo-list__tabs">
+    <button
+      class="promo-list__tab"
+      [class.promo-list__tab--active]="statusTab() === 'all'"
+      (click)="setStatusTab('all')">
+      All ({{ totalAll() }})
+    </button>
+    <button
+      class="promo-list__tab"
+      [class.promo-list__tab--active]="statusTab() === 'active'"
+      (click)="setStatusTab('active')">
+      Active ({{ statusCounts().active }})
+    </button>
+    <button
+      class="promo-list__tab"
+      [class.promo-list__tab--active]="statusTab() === 'scheduled'"
+      (click)="setStatusTab('scheduled')">
+      Scheduled ({{ statusCounts().scheduled }})
+    </button>
+    <button
+      class="promo-list__tab"
+      [class.promo-list__tab--active]="statusTab() === 'expired'"
+      (click)="setStatusTab('expired')">
+      Expired ({{ statusCounts().expired }})
+    </button>
+    <button
+      class="promo-list__tab"
+      [class.promo-list__tab--active]="statusTab() === 'disabled'"
+      (click)="setStatusTab('disabled')">
+      Disabled ({{ statusCounts().disabled }})
+    </button>
+  </div>
+
+  <!-- Table -->
+  @if (paginatedPromotions().length === 0) {
+    <app-empty-state
+      icon="🏷️"
+      title="No promotions found"
+      message="Try adjusting your search or filter criteria, or create a new promotion.">
+    </app-empty-state>
+  } @else {
+    <div class="promo-table card">
+      <table class="promo-table__table">
+        <thead>
+          <tr>
+            <th class="promo-table__th">Name</th>
+            <th class="promo-table__th">Code</th>
+            <th class="promo-table__th">Discount</th>
+            <th class="promo-table__th">Status</th>
+            <th class="promo-table__th">Usage</th>
+            <th class="promo-table__th">Revenue</th>
+            <th class="promo-table__th">Date Range</th>
+            <th class="promo-table__th">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (promo of paginatedPromotions(); track promo.id) {
+            <tr class="promo-table__row" (click)="navigateTo(promo)">
+              <td class="promo-table__td">
+                <span class="promo-table__name">{{ promo.name }}</span>
+              </td>
+              <td class="promo-table__td">
+                <code class="promo-table__code">{{ promo.code }}</code>
+              </td>
+              <td class="promo-table__td">
+                <span class="promo-table__discount">{{ formatDiscount(promo) }}</span>
+              </td>
+              <td class="promo-table__td">
+                @let badge = promo.status | statusBadge;
+                <app-badge [label]="badge.label" [cssClass]="badge.cssClass" />
+              </td>
+              <td class="promo-table__td">{{ promo.usageCount }}</td>
+              <td class="promo-table__td">{{ promo.revenue | currencyFormat }}</td>
+              <td class="promo-table__td">
+                <span class="promo-table__dates">{{ formatDateRange(promo) }}</span>
+              </td>
+              <td class="promo-table__td promo-table__td--actions" (click)="$event.stopPropagation()">
+                <div class="promo-table__actions">
+                  <button class="btn btn--ghost btn--sm" title="Edit" (click)="editPromo(promo, $event)">
+                    &#9998;
+                  </button>
+                  <button
+                    class="btn btn--ghost btn--sm"
+                    [title]="promo.status === 'active' ? 'Disable' : 'Enable'"
+                    (click)="toggleStatus(promo, $event)">
+                    @if (promo.status === 'active') {
+                      &#10074;&#10074;
+                    } @else {
+                      &#9654;
+                    }
+                  </button>
+                  <button class="btn btn--ghost btn--sm promo-table__delete-btn" title="Delete" (click)="confirmDelete(promo, $event)">
+                    &#128465;
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="promo-list__pagination">
+      <app-paginator
+        [total]="totalFiltered()"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)" />
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  <app-modal
+    [open]="showDeleteModal()"
+    title="Delete Promotion"
+    size="sm"
+    (close)="showDeleteModal.set(false)">
+    <p>Are you sure you want to delete this promotion? This action cannot be undone.</p>
+    <div modal-footer>
+      <button class="btn btn--secondary" (click)="showDeleteModal.set(false)">Cancel</button>
+      <button class="btn btn--danger" (click)="executeDelete()">Delete</button>
+    </div>
+  </app-modal>
+</div>

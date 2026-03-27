@@ -1,0 +1,338 @@
+<div class="inventory">
+  <!-- Header -->
+  <div class="inventory__header">
+    <h1 class="page__title">Inventory</h1>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="inventory__summary">
+    <div class="card inventory__stat-card">
+      <div class="inventory__stat-icon inventory__stat-icon--total">&#128230;</div>
+      <div class="inventory__stat-body">
+        <span class="inventory__stat-label">Total Products</span>
+        <span class="inventory__stat-value">{{ service.totalProducts() }}</span>
+      </div>
+    </div>
+    <div class="card inventory__stat-card">
+      <div class="inventory__stat-icon inventory__stat-icon--in-stock">&#9989;</div>
+      <div class="inventory__stat-body">
+        <span class="inventory__stat-label">In Stock</span>
+        <span class="inventory__stat-value inventory__stat-value--success">{{ service.inStockCount() }}</span>
+      </div>
+    </div>
+    <div class="card inventory__stat-card">
+      <div class="inventory__stat-icon inventory__stat-icon--low-stock">&#9888;&#65039;</div>
+      <div class="inventory__stat-body">
+        <span class="inventory__stat-label">Low Stock</span>
+        <span class="inventory__stat-value inventory__stat-value--warning">{{ service.lowStockCount() }}</span>
+      </div>
+    </div>
+    <div class="card inventory__stat-card">
+      <div class="inventory__stat-icon inventory__stat-icon--out-of-stock">&#10060;</div>
+      <div class="inventory__stat-body">
+        <span class="inventory__stat-label">Out of Stock</span>
+        <span class="inventory__stat-value inventory__stat-value--danger">{{ service.outOfStockCount() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="inventory__tabs">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="inventory__tab"
+        [class.inventory__tab--active]="activeTab() === tab.key"
+        (click)="setTab(tab.key)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Stock Levels Tab -->
+  @if (activeTab() === 'stock-levels') {
+    <div class="inventory__panel">
+      <div class="inventory__toolbar">
+        <div class="inventory__search">
+          <app-search-input
+            placeholder="Search by product name..."
+            (searchChange)="onSearch($event)" />
+        </div>
+        <div class="inventory__filter-group">
+          <select class="inventory__filter-select" (change)="onStockFilter($event)">
+            <option value="all">All Status</option>
+            <option value="in-stock">In Stock</option>
+            <option value="low-stock">Low Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+
+      @if (filteredProducts().length > 0) {
+        <div class="card inventory__table-wrap">
+          <div class="inventory__table-scroll">
+            <table class="inventory__table">
+              <thead>
+                <tr>
+                  <th class="inventory__th">Product</th>
+                  <th class="inventory__th">SKU</th>
+                  <th class="inventory__th inventory__th--right">Stock</th>
+                  <th class="inventory__th inventory__th--right">Threshold</th>
+                  <th class="inventory__th">Status</th>
+                  <th class="inventory__th inventory__th--right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of filteredProducts(); track product.id) {
+                  @let status = service.getStockStatus(product);
+                  <tr class="inventory__row" [class.inventory__row--low]="status === 'low-stock'" [class.inventory__row--out]="status === 'out-of-stock'">
+                    <td class="inventory__td inventory__td--name">{{ product.name }}</td>
+                    <td class="inventory__td inventory__td--sku">{{ product.sku }}</td>
+                    <td class="inventory__td inventory__td--right">
+                      <span
+                        class="inventory__stock-value"
+                        [class.inventory__stock-value--green]="product.stock >= product.lowStockThreshold * 2"
+                        [class.inventory__stock-value--yellow]="product.stock >= product.lowStockThreshold && product.stock < product.lowStockThreshold * 2"
+                        [class.inventory__stock-value--red]="product.stock < product.lowStockThreshold">
+                        {{ product.stock }}
+                      </span>
+                    </td>
+                    <td class="inventory__td inventory__td--right">{{ product.lowStockThreshold }}</td>
+                    <td class="inventory__td">
+                      @switch (status) {
+                        @case ('in-stock') {
+                          <app-badge label="In Stock" cssClass="badge badge--success" />
+                        }
+                        @case ('low-stock') {
+                          <app-badge label="Low Stock" cssClass="badge badge--warning" />
+                        }
+                        @case ('out-of-stock') {
+                          <app-badge label="Out of Stock" cssClass="badge badge--danger" />
+                        }
+                      }
+                    </td>
+                    <td class="inventory__td inventory__td--right">
+                      <button class="btn btn--ghost btn--sm" (click)="openAdjustModal(product)">
+                        Adjust Stock
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state
+          icon="&#128230;"
+          title="No products found"
+          message="Try adjusting your search or filter criteria." />
+      }
+    </div>
+  }
+
+  <!-- Restock Requests Tab -->
+  @if (activeTab() === 'restock-requests') {
+    <div class="inventory__panel">
+      <div class="inventory__toolbar">
+        <div class="inventory__filter-group">
+          <select class="inventory__filter-select" (change)="onRestockFilter($event)">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <button class="btn btn--primary btn--sm" (click)="openNewRequestModal()">
+          + New Request
+        </button>
+      </div>
+
+      @if (filteredRequests().length > 0) {
+        <div class="card inventory__table-wrap">
+          <div class="inventory__table-scroll">
+            <table class="inventory__table">
+              <thead>
+                <tr>
+                  <th class="inventory__th">Product</th>
+                  <th class="inventory__th inventory__th--right">Qty Requested</th>
+                  <th class="inventory__th">Status</th>
+                  <th class="inventory__th">Date</th>
+                  <th class="inventory__th inventory__th--right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (req of filteredRequests(); track req.id) {
+                  <tr class="inventory__row">
+                    <td class="inventory__td inventory__td--name">{{ req.productName }}</td>
+                    <td class="inventory__td inventory__td--right">{{ req.quantity }}</td>
+                    <td class="inventory__td">
+                      @switch (req.status) {
+                        @case ('pending') {
+                          <app-badge label="Pending" cssClass="badge badge--warning" />
+                        }
+                        @case ('approved') {
+                          <app-badge label="Approved" cssClass="badge badge--success" />
+                        }
+                        @case ('rejected') {
+                          <app-badge label="Rejected" cssClass="badge badge--danger" />
+                        }
+                      }
+                    </td>
+                    <td class="inventory__td">{{ req.createdAt | relativeTime }}</td>
+                    <td class="inventory__td inventory__td--right">
+                      @if (req.status === 'pending') {
+                        <div class="inventory__action-group">
+                          <button class="btn btn--sm btn--primary" (click)="approveRequest(req.id)">Approve</button>
+                          <button class="btn btn--sm btn--danger" (click)="rejectRequest(req.id)">Reject</button>
+                        </div>
+                      } @else {
+                        <span class="inventory__no-actions">--</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state
+          icon="&#128230;"
+          title="No restock requests"
+          message="Create a new request to restock your products." />
+      }
+    </div>
+  }
+
+  <!-- History Log Tab -->
+  @if (activeTab() === 'history-log') {
+    <div class="inventory__panel">
+      @if (service.historyLog().length > 0) {
+        <div class="card inventory__table-wrap">
+          <div class="inventory__table-scroll">
+            <table class="inventory__table">
+              <thead>
+                <tr>
+                  <th class="inventory__th">Date</th>
+                  <th class="inventory__th">Product</th>
+                  <th class="inventory__th">Type</th>
+                  <th class="inventory__th inventory__th--right">Quantity</th>
+                  <th class="inventory__th">Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of service.historyLog(); track entry.id) {
+                  <tr class="inventory__row">
+                    <td class="inventory__td">{{ entry.createdAt | relativeTime }}</td>
+                    <td class="inventory__td inventory__td--name">{{ entry.productName }}</td>
+                    <td class="inventory__td">
+                      @switch (entry.type) {
+                        @case ('restock') {
+                          <app-badge label="Restock" cssClass="badge badge--success" />
+                        }
+                        @case ('sale') {
+                          <app-badge label="Sale" cssClass="badge badge--info" />
+                        }
+                        @case ('adjustment') {
+                          <app-badge label="Adjustment" cssClass="badge badge--warning" />
+                        }
+                      }
+                    </td>
+                    <td class="inventory__td inventory__td--right">
+                      <span [class.inventory__qty--positive]="entry.quantity > 0" [class.inventory__qty--negative]="entry.quantity < 0">
+                        {{ entry.quantity > 0 ? '+' : '' }}{{ entry.quantity }}
+                      </span>
+                    </td>
+                    <td class="inventory__td inventory__td--note">{{ entry.note }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      } @else {
+        <app-empty-state
+          icon="&#128203;"
+          title="No history entries"
+          message="Stock changes will appear here." />
+      }
+    </div>
+  }
+
+  <!-- Adjust Stock Modal -->
+  <app-modal
+    [open]="adjustModalOpen()"
+    title="Adjust Stock"
+    size="sm"
+    (close)="closeAdjustModal()">
+    @if (selectedProduct()) {
+      <div class="form-group">
+        <label class="inventory__form-label">Product</label>
+        <p class="inventory__form-value">{{ selectedProduct()!.name }}</p>
+      </div>
+      <div class="form-group">
+        <label class="inventory__form-label">Current Stock</label>
+        <p class="inventory__form-value">{{ selectedProduct()!.stock }}</p>
+      </div>
+      <div class="form-group">
+        <label class="inventory__form-label" for="newStock">New Stock Level</label>
+        <input
+          id="newStock"
+          type="number"
+          class="inventory__form-input"
+          min="0"
+          [value]="adjustNewStock()"
+          (input)="onAdjustStockInput($event)" />
+      </div>
+      <div class="form-group">
+        <label class="inventory__form-label" for="adjustNote">Note</label>
+        <textarea
+          id="adjustNote"
+          class="inventory__form-textarea"
+          rows="3"
+          placeholder="Reason for adjustment..."
+          [value]="adjustNote()"
+          (input)="onAdjustNoteInput($event)"></textarea>
+      </div>
+    }
+    <div modal-footer class="inventory__modal-actions">
+      <button class="btn btn--secondary" (click)="closeAdjustModal()">Cancel</button>
+      <button class="btn btn--primary" (click)="confirmAdjust()">Save</button>
+    </div>
+  </app-modal>
+
+  <!-- New Restock Request Modal -->
+  <app-modal
+    [open]="newRequestModalOpen()"
+    title="New Restock Request"
+    size="sm"
+    (close)="closeNewRequestModal()">
+    <div class="form-group">
+      <label class="inventory__form-label" for="requestProduct">Product</label>
+      <select
+        id="requestProduct"
+        class="inventory__form-input"
+        (change)="onRequestProductChange($event)">
+        <option value="">Select a product...</option>
+        @for (product of service.products(); track product.id) {
+          <option [value]="product.id">{{ product.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="inventory__form-label" for="requestQty">Quantity</label>
+      <input
+        id="requestQty"
+        type="number"
+        class="inventory__form-input"
+        min="1"
+        placeholder="Enter quantity..."
+        [value]="requestQuantity()"
+        (input)="onRequestQuantityInput($event)" />
+    </div>
+    <div modal-footer class="inventory__modal-actions">
+      <button class="btn btn--secondary" (click)="closeNewRequestModal()">Cancel</button>
+      <button class="btn btn--primary" [disabled]="!requestProductId() || !requestQuantity()" (click)="confirmNewRequest()">Create Request</button>
+    </div>
+  </app-modal>
+</div>

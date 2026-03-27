@@ -1,0 +1,237 @@
+<div class="promo-editor">
+  <div class="promo-editor__header">
+    <h1 class="page__title">
+      @if (isEditMode()) {
+        Edit Promotion
+      } @else {
+        New Promotion
+      }
+    </h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="promo-editor__form">
+    <!-- Basic Info -->
+    <div class="promo-editor__section card">
+      <div class="card__header">
+        <h2 class="card__title">Basic Information</h2>
+      </div>
+
+      <div class="promo-editor__grid">
+        <div class="form-group">
+          <label class="promo-editor__label" for="name">Promotion Name</label>
+          <input
+            id="name"
+            type="text"
+            class="promo-editor__input"
+            formControlName="name"
+            placeholder="e.g. Spring Sale" />
+          @if (hasError('name')) {
+            <span class="promo-editor__error">{{ getError('name') }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="code">Coupon Code</label>
+          <div class="promo-editor__code-row">
+            <input
+              id="code"
+              type="text"
+              class="promo-editor__input promo-editor__input--code"
+              formControlName="code"
+              placeholder="e.g. SPRING10" />
+            <button type="button" class="btn btn--secondary btn--sm" (click)="generateCode()">
+              Generate Code
+            </button>
+          </div>
+          @if (hasError('code')) {
+            <span class="promo-editor__error">{{ getError('code') }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="promo-editor__label" for="description">Description</label>
+        <textarea
+          id="description"
+          class="promo-editor__textarea"
+          formControlName="description"
+          rows="3"
+          placeholder="Brief description of this promotion..."></textarea>
+      </div>
+    </div>
+
+    <!-- Discount -->
+    <div class="promo-editor__section card">
+      <div class="card__header">
+        <h2 class="card__title">Discount</h2>
+      </div>
+
+      <div class="promo-editor__grid">
+        <div class="form-group">
+          <label class="promo-editor__label">Discount Type</label>
+          <div class="promo-editor__radio-group">
+            <label class="promo-editor__radio">
+              <input type="radio" formControlName="discountType" value="percentage" />
+              <span>Percentage (%)</span>
+            </label>
+            <label class="promo-editor__radio">
+              <input type="radio" formControlName="discountType" value="fixed" />
+              <span>Fixed Amount ($)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="discountValue">Discount Value</label>
+          <div class="promo-editor__input-with-addon">
+            @if (form.get('discountType')?.value === 'percentage') {
+              <input
+                id="discountValue"
+                type="number"
+                class="promo-editor__input"
+                formControlName="discountValue"
+                min="0.01"
+                max="100"
+                step="0.01" />
+              <span class="promo-editor__addon">%</span>
+            } @else {
+              <span class="promo-editor__addon promo-editor__addon--left">$</span>
+              <input
+                id="discountValue"
+                type="number"
+                class="promo-editor__input promo-editor__input--with-left-addon"
+                formControlName="discountValue"
+                min="0.01"
+                step="0.01" />
+            }
+          </div>
+          @if (hasError('discountValue')) {
+            <span class="promo-editor__error">{{ getError('discountValue') }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="promo-editor__section card">
+      <div class="card__header">
+        <h2 class="card__title">Schedule</h2>
+      </div>
+
+      <div class="promo-editor__grid">
+        <div class="form-group">
+          <label class="promo-editor__label" for="startDate">Start Date</label>
+          <input
+            id="startDate"
+            type="date"
+            class="promo-editor__input"
+            formControlName="startDate" />
+          @if (hasError('startDate')) {
+            <span class="promo-editor__error">{{ getError('startDate') }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="endDate">End Date</label>
+          <input
+            id="endDate"
+            type="date"
+            class="promo-editor__input"
+            formControlName="endDate" />
+          @if (hasError('endDate')) {
+            <span class="promo-editor__error">{{ getError('endDate') }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="status">Status</label>
+          <select
+            id="status"
+            class="promo-editor__select"
+            formControlName="status">
+            <option value="active">Active</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conditions -->
+    <div class="promo-editor__section card">
+      <div class="card__header">
+        <h2 class="card__title">Conditions</h2>
+      </div>
+
+      <div class="promo-editor__grid promo-editor__grid--three">
+        <div class="form-group">
+          <label class="promo-editor__label" for="minOrderAmount">Min Order Amount ($)</label>
+          <input
+            id="minOrderAmount"
+            type="number"
+            class="promo-editor__input"
+            formControlName="minOrderAmount"
+            min="0"
+            step="0.01"
+            placeholder="No minimum" />
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="maxUsesTotal">Max Uses (Total)</label>
+          <input
+            id="maxUsesTotal"
+            type="number"
+            class="promo-editor__input"
+            formControlName="maxUsesTotal"
+            min="0"
+            step="1"
+            placeholder="Unlimited" />
+        </div>
+
+        <div class="form-group">
+          <label class="promo-editor__label" for="maxUsesPerCustomer">Max Uses Per Customer</label>
+          <input
+            id="maxUsesPerCustomer"
+            type="number"
+            class="promo-editor__input"
+            formControlName="maxUsesPerCustomer"
+            min="0"
+            step="1"
+            placeholder="Unlimited" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="promo-editor__label">Applicable Categories</label>
+        <div class="promo-editor__checkbox-group">
+          @for (cat of availableCategories(); track cat) {
+            <label class="promo-editor__checkbox">
+              <input
+                type="checkbox"
+                [checked]="isCategorySelected(cat)"
+                (change)="toggleCategory(cat)" />
+              <span>{{ cat }}</span>
+            </label>
+          }
+        </div>
+        @if (selectedCategories().size === 0) {
+          <span class="promo-editor__hint">No categories selected — applies to all products</span>
+        }
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="promo-editor__actions">
+      <button type="button" class="btn btn--secondary" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn--primary" [disabled]="saving()">
+        @if (saving()) {
+          Saving...
+        } @else if (isEditMode()) {
+          Update Promotion
+        } @else {
+          Create Promotion
+        }
+      </button>
+    </div>
+  </form>
+</div>

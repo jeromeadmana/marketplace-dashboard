@@ -1,0 +1,500 @@
+<div class="settings">
+  <div class="settings__header">
+    <h1 class="settings__title">Settings</h1>
+    <p class="settings__subtitle">Manage your store configuration and preferences</p>
+  </div>
+
+  <div class="settings__layout">
+    <!-- Tab Navigation -->
+    <nav class="settings__tabs">
+      @for (tab of tabs; track tab.key) {
+        <button
+          class="settings__tab"
+          [class.settings__tab--active]="activeTab() === tab.key"
+          (click)="setTab(tab.key)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="settings__content">
+      @switch (activeTab()) {
+        <!-- ===================== STORE PROFILE ===================== -->
+        @case ('profile') {
+          <div class="card">
+            <div class="card__header">
+              <h2 class="card__title">Store Profile</h2>
+            </div>
+
+            <form #profileForm="ngForm" (ngSubmit)="saveProfile()" class="settings-form">
+              <div class="settings-form__row">
+                <div class="form-group">
+                  <label for="storeName">Store Name</label>
+                  <input
+                    id="storeName"
+                    name="storeName"
+                    type="text"
+                    [(ngModel)]="storeProfile.name"
+                    required
+                    placeholder="Enter store name"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="storeEmail">Store Email</label>
+                  <input
+                    id="storeEmail"
+                    name="storeEmail"
+                    type="email"
+                    [(ngModel)]="storeProfile.email"
+                    required
+                    placeholder="store@example.com"
+                  />
+                </div>
+              </div>
+
+              <div class="settings-form__row">
+                <div class="form-group">
+                  <label for="storePhone">Phone</label>
+                  <input
+                    id="storePhone"
+                    name="storePhone"
+                    type="tel"
+                    [(ngModel)]="storeProfile.phone"
+                    placeholder="+1 (555) 000-0000"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="storeCurrency">Currency</label>
+                  <select id="storeCurrency" name="storeCurrency" [(ngModel)]="storeProfile.currency">
+                    @for (c of currencies; track c) {
+                      <option [value]="c">{{ c }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="storeTimezone">Timezone</label>
+                <select id="storeTimezone" name="storeTimezone" [(ngModel)]="storeProfile.timezone">
+                  @for (tz of timezones; track tz) {
+                    <option [value]="tz">{{ tz }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="addressLine1">Address Line 1</label>
+                <input
+                  id="addressLine1"
+                  name="addressLine1"
+                  type="text"
+                  [(ngModel)]="storeProfile.addressLine1"
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="addressLine2">Address Line 2</label>
+                <input
+                  id="addressLine2"
+                  name="addressLine2"
+                  type="text"
+                  [(ngModel)]="storeProfile.addressLine2"
+                  placeholder="Apartment, suite, etc."
+                />
+              </div>
+
+              <div class="settings-form__row settings-form__row--triple">
+                <div class="form-group">
+                  <label for="city">City</label>
+                  <input id="city" name="city" type="text" [(ngModel)]="storeProfile.city" placeholder="City" />
+                </div>
+                <div class="form-group">
+                  <label for="state">State</label>
+                  <input id="state" name="state" type="text" [(ngModel)]="storeProfile.state" placeholder="State" />
+                </div>
+                <div class="form-group">
+                  <label for="zip">ZIP Code</label>
+                  <input id="zip" name="zip" type="text" [(ngModel)]="storeProfile.zip" placeholder="ZIP" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="country">Country</label>
+                <input id="country" name="country" type="text" [(ngModel)]="storeProfile.country" placeholder="Country" />
+              </div>
+
+              <div class="form-group">
+                <label for="storeDescription">Store Description</label>
+                <textarea
+                  id="storeDescription"
+                  name="storeDescription"
+                  [(ngModel)]="storeProfile.description"
+                  placeholder="Describe your store..."
+                ></textarea>
+              </div>
+
+              <div class="settings-form__actions">
+                <button type="submit" class="btn btn--primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <!-- ===================== NOTIFICATIONS ===================== -->
+        @case ('notifications') {
+          <div class="card">
+            <div class="card__header">
+              <h2 class="card__title">Push Notifications</h2>
+            </div>
+
+            <div class="toggle-list">
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">New order notifications</span>
+                  <span class="toggle-item__desc">Get notified when a new order is placed</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.newOrder" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Low stock alerts</span>
+                  <span class="toggle-item__desc">Alert when inventory falls below threshold</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.lowStock" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Customer review notifications</span>
+                  <span class="toggle-item__desc">Get notified when a customer leaves a review</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.customerReview" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Promotion reminders</span>
+                  <span class="toggle-item__desc">Reminders about upcoming and expiring promotions</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.promotionReminder" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Weekly sales report</span>
+                  <span class="toggle-item__desc">Receive a weekly summary of your sales performance</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.weeklySalesReport" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Monthly analytics digest</span>
+                  <span class="toggle-item__desc">Monthly deep-dive into store analytics and trends</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.monthlyAnalyticsDigest" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card__header">
+              <h2 class="card__title">Email Preferences</h2>
+            </div>
+
+            <div class="toggle-list">
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Order confirmation emails</span>
+                  <span class="toggle-item__desc">Send confirmation emails to customers on purchase</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.emailOrderConfirmation" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Shipping update emails</span>
+                  <span class="toggle-item__desc">Notify customers about shipping status changes</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.emailShippingUpdates" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+
+              <label class="toggle-item">
+                <div class="toggle-item__info">
+                  <span class="toggle-item__label">Marketing emails</span>
+                  <span class="toggle-item__desc">Send promotional and marketing communications</span>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="notifPrefs.emailMarketing" />
+                  <span class="toggle-switch__slider"></span>
+                </div>
+              </label>
+            </div>
+
+            <div class="settings-form__actions" style="margin-top: 1.5rem;">
+              <button type="button" class="btn btn--primary" (click)="saveNotifications()">Save Preferences</button>
+            </div>
+          </div>
+        }
+
+        <!-- ===================== TEAM ===================== -->
+        @case ('team') {
+          <div class="card">
+            <div class="card__header">
+              <h2 class="card__title">Team Members</h2>
+              <button class="btn btn--primary btn--sm" (click)="openInviteModal()">Invite Member</button>
+            </div>
+
+            <div class="team-table-wrap">
+              <table class="team-table">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (member of teamMembers(); track member.id) {
+                    <tr>
+                      <td>
+                        <div class="team-member">
+                          <img class="team-member__avatar" [src]="member.avatar" [alt]="member.name" />
+                          <div class="team-member__info">
+                            <span class="team-member__name">{{ member.name }}</span>
+                            <span class="team-member__email">{{ member.email }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        @if (editingRoleId() === member.id) {
+                          <select
+                            class="role-select"
+                            [ngModel]="member.role"
+                            (ngModelChange)="updateMemberRole(member.id, $event)"
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="viewer">Viewer</option>
+                          </select>
+                        } @else {
+                          <span class="role-badge role-badge--{{ member.role }}">{{ member.role }}</span>
+                        }
+                      </td>
+                      <td class="team-table__date">{{ member.joinedDate }}</td>
+                      <td>
+                        <div class="team-actions">
+                          <button class="btn btn--ghost btn--sm" (click)="startEditRole(member.id)">Edit Role</button>
+                          <button class="btn btn--ghost btn--sm team-actions__remove" (click)="removeMember(member)">Remove</button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Invite Modal -->
+          <app-modal
+            [open]="showInviteModal()"
+            title="Invite Team Member"
+            size="sm"
+            (close)="closeInviteModal()"
+          >
+            <div class="form-group">
+              <label for="inviteEmail">Email Address</label>
+              <input
+                id="inviteEmail"
+                type="email"
+                [(ngModel)]="inviteEmail"
+                placeholder="colleague@company.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="inviteRole">Role</label>
+              <select id="inviteRole" [(ngModel)]="inviteRole">
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+            <div modal-footer>
+              <button class="btn btn--secondary" (click)="closeInviteModal()">Cancel</button>
+              <button class="btn btn--primary" (click)="inviteMember()" [disabled]="!inviteEmail">Send Invite</button>
+            </div>
+          </app-modal>
+        }
+
+        <!-- ===================== ROLES & PERMISSIONS ===================== -->
+        @case ('roles') {
+          <div class="card">
+            <div class="card__header">
+              <h2 class="card__title">Roles & Permissions</h2>
+            </div>
+            <p class="permissions-desc">This matrix shows the permissions assigned to each role. Permissions are read-only.</p>
+
+            <div class="permissions-table-wrap">
+              <table class="permissions-table">
+                <thead>
+                  <tr>
+                    <th class="permissions-table__resource">Resource</th>
+                    <th class="permissions-table__action">Action</th>
+                    @for (role of roles; track role) {
+                      <th class="permissions-table__role">
+                        <span class="role-badge role-badge--{{ role }}">{{ role }}</span>
+                      </th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (resource of resources; track resource) {
+                    @for (action of actions; track action; let first = $first) {
+                      <tr [class.permissions-table__row--first]="first">
+                        @if (first) {
+                          <td class="permissions-table__resource-cell" [attr.rowspan]="actions.length">
+                            {{ resource | titlecase }}
+                          </td>
+                        }
+                        <td class="permissions-table__action-cell">{{ action }}</td>
+                        @for (role of roles; track role) {
+                          <td class="permissions-table__check-cell">
+                            @if (hasPermission(role, resource, action)) {
+                              <span class="perm-yes">&#10003;</span>
+                            } @else {
+                              <span class="perm-no">&mdash;</span>
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- ===================== API KEYS ===================== -->
+        @case ('api-keys') {
+          <div class="card">
+            <div class="card__header">
+              <h2 class="card__title">API Keys</h2>
+              <button class="btn btn--primary btn--sm" (click)="openGenerateKeyModal()">Generate New Key</button>
+            </div>
+
+            <div class="api-table-wrap">
+              <table class="api-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Key</th>
+                    <th>Created</th>
+                    <th>Last Used</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (key of apiKeys(); track key.id) {
+                    <tr [class.api-table__row--revoked]="key.status === 'revoked'">
+                      <td class="api-table__name">{{ key.name }}</td>
+                      <td class="api-table__key">
+                        <code class="api-key-value">
+                          @if (isKeyVisible(key.id)) {
+                            {{ key.key }}
+                          } @else {
+                            {{ maskKey(key.key) }}
+                          }
+                        </code>
+                        <button class="btn btn--ghost btn--sm" (click)="toggleKeyVisibility(key.id)">
+                          @if (isKeyVisible(key.id)) { Hide } @else { Show }
+                        </button>
+                      </td>
+                      <td class="api-table__date">{{ key.createdDate }}</td>
+                      <td class="api-table__date">{{ key.lastUsed }}</td>
+                      <td>
+                        <span
+                          class="status-badge"
+                          [class.status-badge--active]="key.status === 'active'"
+                          [class.status-badge--revoked]="key.status === 'revoked'"
+                        >
+                          {{ key.status }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="api-actions">
+                          <button
+                            class="btn btn--ghost btn--sm"
+                            (click)="copyKey(key)"
+                            [disabled]="key.status === 'revoked'"
+                          >
+                            @if (copiedKeyId() === key.id) { Copied! } @else { Copy }
+                          </button>
+                          @if (key.status === 'active') {
+                            <button class="btn btn--ghost btn--sm api-actions__revoke" (click)="revokeKey(key)">Revoke</button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Generate Key Modal -->
+          <app-modal
+            [open]="showGenerateKeyModal()"
+            title="Generate New API Key"
+            size="sm"
+            (close)="closeGenerateKeyModal()"
+          >
+            <div class="form-group">
+              <label for="newKeyName">Key Name</label>
+              <input
+                id="newKeyName"
+                type="text"
+                [(ngModel)]="newKeyName"
+                placeholder="e.g. Production API"
+              />
+            </div>
+            <div modal-footer>
+              <button class="btn btn--secondary" (click)="closeGenerateKeyModal()">Cancel</button>
+              <button class="btn btn--primary" (click)="generateKey()" [disabled]="!newKeyName">Generate</button>
+            </div>
+          </app-modal>
+        }
+      }
+    </div>
+  </div>
+</div>

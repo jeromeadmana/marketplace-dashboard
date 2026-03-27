@@ -1,0 +1,431 @@
+.order-detail {
+  &__loading {
+    padding: 2rem;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__tracking {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  &__tracking-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  &__tracking-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--primary);
+    font-family: monospace;
+  }
+
+  // Grid layout
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  // Line items table
+  &__items-card {
+    padding: 0;
+
+    .card__header {
+      padding: 1.25rem 1.25rem 0;
+    }
+  }
+
+  &__items-scroll {
+    overflow-x: auto;
+  }
+
+  &__items-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+  }
+
+  &__items-th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+
+    &--right {
+      text-align: right;
+    }
+  }
+
+  &__items-row {
+    &:not(:last-child) .order-detail__items-td {
+      border-bottom: 1px solid var(--border);
+    }
+  }
+
+  &__items-td {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+
+    &--right {
+      text-align: right;
+    }
+
+    &--mono {
+      font-family: monospace;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    &--bold {
+      font-weight: 600;
+    }
+  }
+
+  &__product {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__product-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.375rem;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+
+  &__product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__product-name {
+    font-weight: 500;
+  }
+
+  &__product-variant {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+  }
+
+  // Order summary
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+
+    &--discount {
+      color: var(--color-success);
+    }
+
+    &--total {
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 2px solid var(--border);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  }
+
+  &__coupon {
+    display: inline-block;
+    margin-left: 0.375rem;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 0.25rem;
+    background: var(--badge-success-bg);
+    color: var(--badge-success-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  // Timeline
+  &__timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 1.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+  }
+
+  &__timeline-item {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 1.25rem;
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  &__timeline-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 2px var(--border);
+    z-index: 1;
+    flex-shrink: 0;
+
+    &--pending { background: var(--badge-warning-text); }
+    &--processing { background: var(--badge-info-text); }
+    &--shipped { background: var(--badge-primary-text); }
+    &--delivered { background: var(--badge-success-text); }
+    &--cancelled { background: var(--badge-danger-text); }
+    &--refunded { background: var(--badge-muted-text); }
+  }
+
+  &__timeline-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  &__timeline-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__timeline-date {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+  }
+
+  &__timeline-msg {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  // Notes
+  &__notes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__note {
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border);
+  }
+
+  &__note-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  &__note-author {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__note-badge {
+    display: inline-block;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 0.25rem;
+    background: var(--badge-warning-bg);
+    color: var(--badge-warning-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  &__note-date {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-left: auto;
+  }
+
+  &__note-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  &__note-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__note-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 5rem;
+    transition: border-color 0.15s;
+
+    &::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    &:focus {
+      border-color: var(--primary);
+    }
+  }
+
+  &__note-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__note-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    input {
+      accent-color: var(--primary);
+    }
+  }
+
+  // Customer card
+  &__customer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__customer-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__customer-email {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__customer-link {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--primary);
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // Address card
+  &__address {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  &__address-phone {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+  }
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .order-detail__grid {
+    grid-template-columns: 1fr;
+  }
+}

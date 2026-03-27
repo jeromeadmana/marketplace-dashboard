@@ -1,0 +1,136 @@
+<div class="customer-list">
+  @if (loading()) {
+    <!-- Skeleton Loading State -->
+    <div class="customer-list__header">
+      <app-skeleton width="150px" height="32px" />
+    </div>
+
+    <!-- Summary Cards Skeleton -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+      <app-skeleton width="100%" height="80px" radius="0.5rem" />
+    </div>
+
+    <!-- Table Rows Skeleton -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem;">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <app-skeleton width="100%" height="48px" radius="0.375rem" />
+      }
+    </div>
+  } @else {
+  <div class="customer-list__header">
+    <h1 class="page__title">Customers</h1>
+  </div>
+
+  <!-- Insight Cards -->
+  <div class="customer-list__insights">
+    <div class="card customer-list__insight-card">
+      <span class="customer-list__insight-label">Total Customers</span>
+      <span class="customer-list__insight-value">{{ counts().all }}</span>
+    </div>
+    <div class="card customer-list__insight-card">
+      <span class="customer-list__insight-label">Total Revenue</span>
+      <span class="customer-list__insight-value">{{ totalRevenue() | currencyFormat:'USD':true }}</span>
+    </div>
+    <div class="card customer-list__insight-card">
+      <span class="customer-list__insight-label">Avg Lifetime Value</span>
+      <span class="customer-list__insight-value">{{ avgLifetimeValue() | currencyFormat }}</span>
+    </div>
+  </div>
+
+  <!-- Segment Tabs -->
+  <div class="customer-list__tabs">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="customer-list__tab"
+        [class.customer-list__tab--active]="activeTab() === tab.key"
+        (click)="setTab(tab.key)">
+        {{ tab.label }}
+        <span class="customer-list__tab-count">{{ getTabCount(tab.key) }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Search -->
+  <div class="customer-list__filters">
+    <div class="customer-list__search">
+      <app-search-input
+        placeholder="Search by name or email..."
+        (searchChange)="onSearch($event)" />
+    </div>
+  </div>
+
+  <!-- Table -->
+  @if (paginatedCustomers().length > 0) {
+    <div class="card customer-list__table-wrap">
+      <div class="customer-list__table-scroll">
+        <table class="customer-list__table">
+          <thead>
+            <tr>
+              <th class="customer-list__th customer-list__th--sortable" (click)="toggleSort('name')">
+                Customer {{ getSortIcon('name') }}
+              </th>
+              <th class="customer-list__th">Segment</th>
+              <th class="customer-list__th customer-list__th--sortable customer-list__th--right" (click)="toggleSort('totalOrders')">
+                Orders {{ getSortIcon('totalOrders') }}
+              </th>
+              <th class="customer-list__th customer-list__th--sortable customer-list__th--right" (click)="toggleSort('totalSpent')">
+                Total Spent {{ getSortIcon('totalSpent') }}
+              </th>
+              <th class="customer-list__th customer-list__th--right">Avg Order</th>
+              <th class="customer-list__th">Last Order</th>
+              <th class="customer-list__th customer-list__th--sortable" (click)="toggleSort('createdAt')">
+                Joined {{ getSortIcon('createdAt') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (customer of paginatedCustomers(); track customer.id) {
+              @let segmentBadge = customer.segment | statusBadge;
+              <tr class="customer-list__row" (click)="goToDetail(customer)">
+                <td class="customer-list__td">
+                  <div class="customer-list__customer">
+                    <div class="customer-list__avatar">
+                      @if (customer.avatar) {
+                        <img [src]="customer.avatar" [alt]="customer.name" class="customer-list__avatar-img" />
+                      } @else {
+                        <span class="customer-list__avatar-initials">{{ customer.name | initials }}</span>
+                      }
+                    </div>
+                    <div class="customer-list__customer-info">
+                      <span class="customer-list__customer-name">{{ customer.name }}</span>
+                      <span class="customer-list__customer-email">{{ customer.email }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="customer-list__td">
+                  <app-badge [label]="segmentBadge.label" [cssClass]="segmentBadge.cssClass" />
+                </td>
+                <td class="customer-list__td customer-list__td--right">{{ customer.totalOrders }}</td>
+                <td class="customer-list__td customer-list__td--right customer-list__td--bold">{{ customer.totalSpent | currencyFormat }}</td>
+                <td class="customer-list__td customer-list__td--right">{{ customer.averageOrderValue | currencyFormat }}</td>
+                <td class="customer-list__td">{{ customer.lastOrderAt | relativeTime }}</td>
+                <td class="customer-list__td">{{ customer.createdAt | relativeTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-paginator
+        [total]="totalFiltered()"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage()"
+        (pageChange)="onPageChange($event)" />
+    </div>
+  } @else {
+    <div class="card">
+      <app-empty-state
+        icon="&#128100;"
+        title="No customers found"
+        message="Try adjusting your filters or search query." />
+    </div>
+  }
+  }
+</div>
